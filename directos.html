@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuraVivo — Directos en vivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root{
+    --void:#08070f;
+    --void-2:#0e0c1c;
+    --panel: rgba(255,255,255,0.045);
+    --panel-solid:#131120;
+    --panel-strong: rgba(255,255,255,0.07);
+    --line: rgba(255,255,255,0.09);
+    --line-soft: rgba(255,255,255,0.05);
+    --coral:#ff5d73;
+    --violet:#8a5cf6;
+    --cyan:#2dd9d0;
+    --amber:#ffb648;
+    --whats:#25D366;
+    --hi:#f5f2fb;
+    --mid:#b6b0ce;
+    --low:#726c8e;
+    --danger:#ff4d6d;
+    --ok:#3ddc97;
+    --r-lg:22px;
+    --r-md:15px;
+    --r-sm:10px;
+    --header-h:70px;
+    --side-w:272px;
+    --chat-w:352px;
+    --grad-brand: linear-gradient(120deg,var(--violet),var(--coral) 60%, var(--amber));
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Manrope',sans-serif;
+    background:var(--void);
+    color:var(--hi);
+    overflow:hidden;
+    position:relative;
+  }
+  ::selection{ background:var(--violet); color:#fff; }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.14); border-radius:10px; }
+  ::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,0.22); }
+  h1,h2,h3,.brand-font{ font-family:'Sora',sans-serif; }
+  a{ color:inherit; }
+  button{ font-family:inherit; }
+  input,select,textarea{ font-family:inherit; }
+
+  /* ============ FONDO ANIMADO DE ORBES FLOTANTES ============ */
+  .bg-orbs{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; background:
+      radial-gradient(ellipse at 20% 10%, #14102b 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 90%, #170f24 0%, transparent 55%),
+      var(--void); }
+  .orb{ position:absolute; border-radius:50%; filter:blur(95px); mix-blend-mode:screen; will-change:transform; }
+  .orb1{ width:560px; height:560px; background:var(--violet); opacity:.5; top:-180px; left:-140px; animation:driftA 28s ease-in-out infinite; }
+  .orb2{ width:460px; height:460px; background:var(--coral); opacity:.42; bottom:-160px; right:-120px; animation:driftB 34s ease-in-out infinite; }
+  .orb3{ width:380px; height:380px; background:var(--cyan); opacity:.34; top:38%; left:58%; animation:driftC 24s ease-in-out infinite; }
+  .orb4{ width:300px; height:300px; background:var(--amber); opacity:.24; bottom:8%; left:18%; animation:driftA 38s ease-in-out infinite reverse; }
+  @keyframes driftA{ 0%,100%{ transform:translate(0,0) scale(1); } 33%{ transform:translate(70px,-50px) scale(1.1); } 66%{ transform:translate(-40px,40px) scale(0.94); } }
+  @keyframes driftB{ 0%,100%{ transform:translate(0,0) scale(1); } 40%{ transform:translate(-60px,-30px) scale(1.06); } 75%{ transform:translate(50px,45px) scale(0.96); } }
+  @keyframes driftC{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(-70px,60px) scale(1.15); } }
+  @media (prefers-reduced-motion: reduce){ .orb{ animation:none !important; } }
+
+  .noise-veil{ position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+  /* ============ TOAST ============ */
+  #toast-stack{ position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:4000; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .toast{ background:var(--panel-solid); border:1px solid var(--line); padding:11px 18px; border-radius:30px; font-size:13.5px; font-weight:600; box-shadow:0 12px 30px rgba(0,0,0,.45); animation:toastIn .25s ease; display:flex; align-items:center; gap:8px; }
+  .toast.err{ border-color:rgba(255,77,109,.5); }
+  .toast.ok{ border-color:rgba(61,220,151,.45); }
+  @keyframes toastIn{ from{ opacity:0; transform:translateY(-10px); } to{ opacity:1; transform:translateY(0); } }
+
+  /* ============ PANTALLA DE AUTENTICACIÓN ============ */
+  #auth-screen{ position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .auth-shell{ position:relative; z-index:2; width:100%; max-width:960px; display:grid; grid-template-columns:1.1fr 1fr; background:var(--panel); border:1px solid var(--line); border-radius:28px; overflow:hidden; backdrop-filter:blur(20px); box-shadow:0 40px 100px rgba(0,0,0,.55); animation:riseIn .5s ease; }
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(18px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .auth-visual{ padding:46px 40px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(160deg, rgba(138,92,246,.28), rgba(255,93,115,.14) 60%, transparent); border-right:1px solid var(--line); }
+  .auth-visual .brand{ display:flex; align-items:center; gap:10px; font-size:22px; font-weight:800; letter-spacing:.2px; }
+  .auth-visual .brand i{ color:var(--coral); }
+  .auth-visual h2{ font-size:30px; line-height:1.25; font-weight:700; margin-top:26px; }
+  .auth-visual h2 span{ background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .auth-pill-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+  .auth-pill{ font-size:12px; font-weight:700; padding:7px 12px; border-radius:20px; background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--mid); display:flex; align-items:center; gap:6px; }
+  .auth-pill i{ font-size:11px; }
+  .auth-mock{ margin-top:30px; border-radius:16px; border:1px solid var(--line); background:rgba(0,0,0,.35); padding:14px; display:flex; align-items:center; gap:10px; }
+  .auth-mock .dot{ width:9px; height:9px; border-radius:50%; background:var(--danger); box-shadow:0 0 10px var(--danger); animation:blink 1.4s infinite; }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .auth-mock span{ font-size:12.5px; color:var(--mid); font-weight:600; }
+
+  .auth-form-side{ padding:46px 42px; display:flex; flex-direction:column; }
+  .auth-tabs{ display:flex; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:14px; padding:4px; margin-bottom:26px; }
+  .auth-tab{ flex:1; text-align:center; padding:10px; border-radius:11px; font-weight:700; font-size:13.5px; color:var(--mid); cursor:pointer; transition:.2s; }
+  .auth-tab.active{ background:var(--grad-brand); color:#0a0713; }
+  .auth-form{ display:none; flex-direction:column; gap:14px; }
+  .auth-form.active{ display:flex; }
+  .field-label{ font-size:12.5px; font-weight:700; color:var(--mid); margin-bottom:6px; display:block; }
+  .field-input{ width:100%; background:rgba(0,0,0,.3); border:1px solid var(--line); padding:13px 14px; border-radius:12px; color:var(--hi); font-size:14.5px; outline:none; transition:border-color .2s, box-shadow .2s; }
+  .field-input:focus{ border-color:var(--violet); box-shadow:0 0 0 3px rgba(138,92,246,.18); }
+  textarea.field-input{ resize:vertical; min-height:64px; }
+  .btn{ border:none; cursor:pointer; font-weight:700; border-radius:12px; transition:transform .15s, filter .15s, background .2s; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+  .btn:active{ transform:scale(.97); }
+  .btn-grad{ background:var(--grad-brand); color:#100a1e; padding:13px; font-size:14.5px; }
+  .btn-grad:hover{ filter:brightness(1.08); }
+  .btn-ghost{ background:rgba(255,255,255,.06); color:var(--hi); border:1px solid var(--line); padding:11px 14px; font-size:13.5px; }
+  .btn-ghost:hover{ background:rgba(255,255,255,.11); }
+  .btn-danger{ background:rgba(255,77,109,.14); color:#ffb3c0; border:1px solid rgba(255,77,109,.4); padding:11px 14px; font-size:13.5px; }
+  .btn-danger:hover{ background:rgba(255,77,109,.24); }
+  .btn-sm{ padding:7px 11px; font-size:12px; border-radius:9px; }
+  .auth-note{ margin-top:16px; font-size:12px; color:var(--low); line-height:1.5; }
+
+  /* ============ APP SHELL ============ */
+  #app{ position:relative; z-index:2; height:100vh; display:none; flex-direction:column; opacity:0; }
+  #app.show{ display:flex; animation:appFade .5s ease forwards; }
+  @keyframes appFade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  header{ height:var(--header-h); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 22px; border-bottom:1px solid var(--line); background:rgba(10,9,20,.65); backdrop-filter:blur(16px); z-index:30; }
+  .brand-mark{ display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; cursor:pointer; }
+  .brand-mark .brand-ico{ width:34px; height:34px; border-radius:10px; background:var(--grad-brand); display:flex; align-items:center; justify-content:center; color:#0d0918; font-size:16px; }
+  .header-actions{ display:flex; align-items:center; gap:12px; }
+  .search-wrap{ position:relative; }
+  .search-wrap input{ width:230px; background:rgba(255,255,255,.05); border:1px solid var(--line); padding:9px 14px 9px 34px; border-radius:20px; color:var(--hi); font-size:13px; outline:none; transition:.2s; }
+  .search-wrap input:focus{ border-color:var(--violet); width:270px; }
+  .search-wrap i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--low); }
+  .btn-live-now{ background:linear-gradient(120deg,var(--coral),#ff2e57); color:#fff; padding:10px 16px; border-radius:12px; font-size:13.5px; box-shadow:0 8px 20px rgba(255,45,80,.28); }
+  .btn-live-now:hover{ filter:brightness(1.07); }
+  .acc-badge{ display:flex; align-items:center; gap:9px; background:rgba(255,255,255,.05); border:1px solid var(--line); padding:5px 14px 5px 5px; border-radius:24px; cursor:pointer; transition:.2s; position:relative; }
+  .acc-badge:hover{ background:rgba(255,255,255,.09); }
+  .avatar{ border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; background:var(--grad-brand); flex-shrink:0; overflow:hidden; background-size:cover; background-position:center; }
+  .av-32{ width:32px; height:32px; font-size:13px; }
+  .av-40{ width:40px; height:40px; font-size:15px; }
+  .av-56{ width:56px; height:56px; font-size:20px; }
+  .av-88{ width:88px; height:88px; font-size:30px; }
+  .acc-badge span{ font-size:13.5px; font-weight:700; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dropdown{ position:absolute; top:calc(100% + 10px); right:0; min-width:220px; background:var(--panel-solid); border:1px solid var(--line); border-radius:14px; padding:8px; display:none; flex-direction:column; gap:2px; box-shadow:0 20px 45px rgba(0,0,0,.5); z-index:60; }
+  .dropdown.show{ display:flex; animation:toastIn .18s ease; }
+  .dd-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:9px; font-size:13.5px; font-weight:600; cursor:pointer; color:var(--hi); }
+  .dd-item i{ width:16px; color:var(--mid); }
+  .dd-item:hover{ background:rgba(255,255,255,.08); }
+  .dd-sep{ height:1px; background:var(--line); margin:5px 4px; }
+  .dd-item.danger{ color:#ffb3c0; }
+  .dd-item.danger i{ color:#ffb3c0; }
+
+  /* ============ LAYOUT PRINCIPAL ============ */
+  .shell{ flex:1; display:flex; min-height:0; }
+  aside.rail{ width:var(--side-w); flex-shrink:0; border-right:1px solid var(--line); background:rgba(255,255,255,.015); display:flex; flex-direction:column; padding:18px 0; overflow:hidden; }
+  .rail-title{ padding:0 18px 10px; font-size:11.5px; font-weight:800; color:var(--low); letter-spacing:.4px; display:flex; align-items:center; justify-content:space-between; }
+  .rail-count{ background:rgba(255,93,115,.15); color:var(--coral); padding:2px 8px; border-radius:10px; font-size:11px; }
+  .rail-list{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:3px; padding:0 10px; }
+  .rail-item{ display:flex; align-items:center; gap:11px; padding:9px 9px; border-radius:12px; cursor:pointer; transition:background .15s; }
+  .rail-item:hover{ background:rgba(255,255,255,.06); }
+  .rail-item .ring{ position:relative; flex-shrink:0; }
+  .rail-item .ring::before{ content:''; position:absolute; inset:-3px; border-radius:50%; background:linear-gradient(135deg,var(--coral),var(--amber)); z-index:-1; animation:ringPulse 2.4s ease-in-out infinite; }
+  @keyframes ringPulse{ 0%,100%{ opacity:.7; } 50%{ opacity:1; } }
+  .rail-meta{ flex:1; min-width:0; }
+  .rail-name{ font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rail-sub{ font-size:11.5px; color:var(--low); display:flex; align-items:center; gap:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rail-sub .dot-live{ width:6px; height:6px; border-radius:50%; background:var(--coral); flex-shrink:0; }
+  .rail-empty{ text-align:center; color:var(--low); font-size:12.5px; margin-top:26px; padding:0 18px; line-height:1.6; }
+
+  .stage{ flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden; }
+  .view{ display:none; flex:1; overflow-y:auto; padding:28px 30px 50px; }
+  .view.active{ display:flex; flex-direction:column; }
+
+  .view-head{ display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+  .view-head h1{ font-size:23px; font-weight:800; }
+  .view-head p{ color:var(--low); font-size:13px; margin-top:3px; }
+  .chip-filters{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{ padding:7px 14px; font-size:12.5px; font-weight:700; border-radius:20px; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--mid); cursor:pointer; transition:.15s; }
+  .chip.active, .chip:hover{ background:rgba(138,92,246,.18); border-color:rgba(138,92,246,.5); color:var(--hi); }
+
+  .card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(266px,1fr)); gap:20px; }
+  .live-card{ background:var(--panel); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; cursor:pointer; transition:transform .22s, border-color .22s, box-shadow .22s; }
+  .live-card:hover{ transform:translateY(-5px); border-color:rgba(138,92,246,.45); box-shadow:0 22px 40px rgba(0,0,0,.4); }
+  .thumb{ position:relative; width:100%; aspect-ratio:16/9; background:linear-gradient(135deg,#1c1730,#241226); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .thumb img{ width:100%; height:100%; object-fit:cover; }
+  .thumb .thumb-fallback{ display:flex; flex-direction:column; align-items:center; gap:6px; color:rgba(255,255,255,.25); }
+  .thumb .thumb-fallback i{ font-size:34px; }
+  .thumb::after{ content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.55), transparent 45%); }
+  .tag-live{ position:absolute; top:10px; left:10px; z-index:2; background:var(--coral); color:#fff; font-size:10.5px; font-weight:800; padding:4px 9px; border-radius:6px; letter-spacing:.4px; display:flex; align-items:center; gap:5px; }
+  .tag-live .b{ width:6px; height:6px; border-radius:50%; background:#fff; animation:blink 1.3s infinite; }
+  .tag-viewers{ position:absolute; top:10px; right:10px; z-index:2; background:rgba(0,0,0,.55); color:#fff; font-size:11px; font-weight:700; padding:4px 9px; border-radius:6px; display:flex; align-items:center; gap:5px; }
+  .tag-cat{ position:absolute; bottom:10px; left:10px; z-index:2; background:rgba(0,0,0,.5); color:var(--mid); font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:5px; }
+  .card-body{ padding:13px 14px; display:flex; gap:11px; }
+  .card-body h3{ font-size:14px; font-weight:700; line-height:1.3; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; }
+  .card-body p{ font-size:12px; color:var(--low); }
+  .empty-block{ margin:60px auto; text-align:center; max-width:340px; color:var(--low); display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .empty-block i{ font-size:38px; color:rgba(138,92,246,.5); }
+  .empty-block h3{ color:var(--mid); font-size:16px; }
+
+  /* ============ VISTA WATCH ============ */
+  .btn-back{ background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--hi); padding:8px 14px; border-radius:11px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:7px; width:fit-content; margin-bottom:16px; transition:.15s; }
+  .btn-back:hover{ background:rgba(255,255,255,.11); }
+  .watch-wrap{ display:flex; gap:20px; flex:1; min-height:0; }
+  .player-col{ flex:1; min-width:0; display:flex; flex-direction:column; gap:14px; }
+  .player-box{ position:relative; width:100%; aspect-ratio:16/9; background:#050308; border-radius:var(--r-lg); overflow:hidden; border:1px solid var(--line); box-shadow:0 25px 60px rgba(0,0,0,.5); }
+  .player-box video, .player-box img.frame-feed{ width:100%; height:100%; object-fit:cover; display:block; }
+  .player-placeholder{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:rgba(255,255,255,.35); background:radial-gradient(circle at 50% 40%, #201a34, #0a0812); }
+  .player-placeholder i{ font-size:40px; }
+  .player-topbar{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; align-items:flex-start; z-index:5; }
+  .live-info-pill{ background:rgba(0,0,0,.5); backdrop-filter:blur(6px); border-radius:20px; padding:6px 8px 6px 6px; display:flex; align-items:center; gap:8px; }
+  .live-info-pill .nm{ font-size:12.5px; font-weight:700; }
+  .live-info-pill .tag-live{ position:static; }
+  .pill-stats{ display:flex; gap:8px; }
+  .stat-pill{ background:rgba(0,0,0,.5); backdrop-filter:blur(6px); padding:6px 11px; border-radius:20px; font-size:11.5px; font-weight:700; display:flex; align-items:center; gap:6px; }
+  #floating-reactions{ position:absolute; bottom:66px; right:16px; width:120px; height:280px; pointer-events:none; overflow:hidden; z-index:6; }
+  .float-emoji{ position:absolute; bottom:0; right:14px; font-size:26px; animation:floatUp 2.4s ease-out forwards; }
+  @keyframes floatUp{ 0%{ transform:translateY(0) scale(.4) rotate(0deg); opacity:0; } 15%{ opacity:1; } 100%{ transform:translateY(-230px) scale(1.15) rotate(14deg); opacity:0; } }
+  .gift-burst{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:8; pointer-events:none; }
+  .gift-burst-inner{ display:flex; flex-direction:column; align-items:center; gap:8px; animation:giftPop 2.2s ease forwards; }
+  .gift-burst-inner i{ font-size:52px; filter:drop-shadow(0 6px 18px rgba(0,0,0,.6)); }
+  .gift-burst-inner span{ background:rgba(0,0,0,.55); padding:6px 16px; border-radius:20px; font-weight:800; font-size:13px; }
+  @keyframes giftPop{ 0%{ transform:scale(.3); opacity:0; } 15%{ transform:scale(1.15); opacity:1; } 25%{ transform:scale(1); } 82%{ opacity:1; } 100%{ transform:scale(1.3) translateY(-30px); opacity:0; } }
+  .stream-meta-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+  .stream-meta-row h2{ font-size:18px; font-weight:800; }
+  .stream-meta-row .creator-line{ display:flex; align-items:center; gap:9px; margin-top:8px; cursor:pointer; width:fit-content; }
+  .stream-meta-row .creator-line b{ font-size:13.5px; }
+  .stream-meta-row .creator-line small{ display:block; color:var(--low); font-size:11.5px; }
+  .share-btn{ background:rgba(255,255,255,.06); border:1px solid var(--line); padding:9px 14px; border-radius:11px; font-size:12.5px; font-weight:700; cursor:pointer; color:var(--hi); display:flex; align-items:center; gap:7px; }
+  .share-btn:hover{ background:rgba(255,255,255,.11); }
+
+  /* ============ CHAT ============ */
+  .chat-col{ width:var(--chat-w); flex-shrink:0; display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; position:relative; }
+  .chat-top{ padding:13px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,.02); }
+  .chat-top b{ font-size:12.5px; letter-spacing:.3px; text-transform:uppercase; color:var(--mid); }
+  .switch{ position:relative; width:36px; height:20px; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .slider{ position:absolute; inset:0; background:rgba(255,255,255,.15); border-radius:20px; cursor:pointer; transition:.2s; }
+  .switch .slider::before{ content:''; position:absolute; width:14px; height:14px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+  .switch input:checked + .slider{ background:var(--violet); }
+  .switch input:checked + .slider::before{ transform:translateX(16px); }
+  .chat-msgs{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:11px; position:relative; }
+  .msg-row{ font-size:13px; line-height:1.5; word-break:break-word; animation:msgIn .18s ease; }
+  @keyframes msgIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0);} }
+  .msg-row .who{ font-weight:800; margin-right:6px; cursor:pointer; }
+  .msg-row .who:hover{ text-decoration:underline; }
+  .msg-row .ts{ font-size:10px; color:var(--low); margin-left:6px; }
+  .msg-row a{ color:#7fd0ff; text-decoration:underline; word-break:break-all; }
+  .msg-row.system{ color:var(--low); font-style:italic; text-align:center; font-size:12px; }
+  .msg-row img.sticker-img{ display:block; max-width:92px; max-height:92px; margin-top:5px; border-radius:8px; }
+  .msg-row.gift-row{ background:linear-gradient(120deg, rgba(37,211,102,.16), rgba(255,182,72,.1)); border:1px solid rgba(37,211,102,.35); padding:9px 11px; border-radius:12px; display:flex; align-items:center; gap:9px; }
+  .msg-row.gift-row i{ color:var(--whats); font-size:17px; }
+  .jump-btn{ position:absolute; bottom:12px; left:50%; transform:translateX(-50%); background:var(--violet); color:#fff; font-size:11.5px; font-weight:700; padding:6px 14px; border-radius:20px; cursor:pointer; display:none; align-items:center; gap:6px; box-shadow:0 8px 20px rgba(138,92,246,.4); z-index:5; }
+  .chat-toolbar{ display:flex; gap:4px; padding:8px 10px; border-top:1px solid var(--line); background:rgba(255,255,255,.02); position:relative; }
+  .tool-btn{ background:transparent; border:none; color:var(--mid); font-size:16px; cursor:pointer; padding:7px 9px; border-radius:9px; transition:.15s; }
+  .tool-btn:hover{ color:var(--hi); background:rgba(255,255,255,.08); }
+  .tool-btn.whats i{ color:var(--whats); }
+  .chat-input-row{ display:flex; gap:8px; padding:10px 12px 12px; border-top:1px solid var(--line); }
+  .chat-input-row input{ flex:1; background:rgba(0,0,0,.3); border:1px solid var(--line); padding:10px 13px; border-radius:22px; color:var(--hi); font-size:13px; outline:none; }
+  .chat-input-row input:focus{ border-color:var(--violet); }
+  .btn-send{ background:var(--grad-brand); color:#100a1e; border:none; width:38px; height:38px; border-radius:50%; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .popover{ position:absolute; bottom:56px; left:10px; right:10px; background:var(--panel-solid); border:1px solid var(--line); border-radius:14px; padding:13px; display:none; flex-direction:column; gap:10px; z-index:50; box-shadow:0 20px 45px rgba(0,0,0,.5); max-height:260px; }
+  .popover.show{ display:flex; }
+  .pop-head{ display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:800; color:var(--mid); letter-spacing:.3px; text-transform:uppercase; }
+  .pop-head i{ cursor:pointer; color:var(--low); }
+  .pop-head i:hover{ color:var(--hi); }
+  .emoji-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; overflow-y:auto; }
+  .emoji-grid button{ background:transparent; border:none; font-size:20px; cursor:pointer; padding:5px; border-radius:8px; }
+  .emoji-grid button:hover{ background:rgba(255,255,255,.08); }
+  .sticker-row{ display:flex; gap:9px; overflow-x:auto; padding-bottom:2px; }
+  .sticker-row img{ width:58px; height:58px; object-fit:cover; border-radius:9px; cursor:pointer; border:1px solid var(--line); transition:.15s; background:#000; flex-shrink:0; }
+  .sticker-row img:hover{ transform:scale(1.06); border-color:var(--whats); }
+  .gift-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  .gift-item{ display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:11px; border:1px solid var(--line); background:rgba(255,255,255,.03); cursor:pointer; transition:.15s; }
+  .gift-item:hover{ border-color:var(--whats); background:rgba(37,211,102,.1); }
+  .gift-ic{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; flex-shrink:0; }
+  .gift-item b{ font-size:12px; display:block; }
+  .gift-item small{ color:var(--low); font-size:10px; }
+
+  /* ============ TRANSMITIR ============ */
+  .broadcast-shell{ max-width:760px; margin:0 auto; width:100%; display:flex; flex-direction:column; gap:18px; }
+  .setup-card{ background:var(--panel); border:1px solid var(--line); border-radius:var(--r-lg); padding:26px; display:flex; flex-direction:column; gap:16px; }
+  .setup-card h2{ font-size:19px; }
+  .cat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+  .cat-opt{ padding:11px; border-radius:11px; border:1px solid var(--line); background:rgba(255,255,255,.03); text-align:center; font-size:12.5px; font-weight:700; cursor:pointer; transition:.15s; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .cat-opt i{ font-size:16px; color:var(--mid); }
+  .cat-opt.active{ border-color:var(--violet); background:rgba(138,92,246,.16); }
+  .cat-opt.active i{ color:var(--violet); }
+  .broadcast-live-box{ display:flex; flex-direction:column; gap:14px; }
+  .bc-controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .icon-toggle{ width:46px; height:46px; border-radius:50%; border:1px solid var(--line); background:rgba(255,255,255,.06); color:var(--hi); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.15s; }
+  .icon-toggle:hover{ background:rgba(255,255,255,.11); }
+  .icon-toggle.off{ background:rgba(255,77,109,.18); border-color:rgba(255,77,109,.5); color:#ff8fa3; }
+  .bc-timer{ display:flex; align-items:center; gap:8px; justify-content:center; font-weight:700; font-size:13.5px; color:var(--mid); }
+  .bc-timer .b{ width:8px; height:8px; border-radius:50%; background:var(--coral); animation:blink 1.2s infinite; }
+
+  /* ============ PERFIL / CUENTAS / HISTORIAL ============ */
+  .tabbed-head{ display:flex; gap:8px; border-bottom:1px solid var(--line); margin-bottom:22px; }
+  .tabbed-head .t{ padding:10px 16px; font-size:13.5px; font-weight:700; color:var(--low); cursor:pointer; border-bottom:2px solid transparent; transition:.15s; }
+  .tabbed-head .t.active{ color:var(--hi); border-color:var(--violet); }
+  .subview{ display:none; flex-direction:column; gap:20px; max-width:680px; }
+  .subview.active{ display:flex; }
+  .panel-box{ background:var(--panel); border:1px solid var(--line); border-radius:var(--r-lg); padding:26px; }
+  .profile-top{ display:flex; gap:20px; align-items:center; }
+  .avatar-upload{ position:relative; cursor:pointer; }
+  .avatar-upload .edit-badge{ position:absolute; bottom:-2px; right:-2px; width:26px; height:26px; border-radius:50%; background:var(--violet); display:flex; align-items:center; justify-content:center; font-size:11px; border:3px solid var(--void); }
+  .form-grid{ display:flex; flex-direction:column; gap:14px; margin-top:20px; }
+  .form-row-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .acc-row{ display:flex; align-items:center; gap:13px; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.03); }
+  .acc-row .meta{ flex:1; min-width:0; }
+  .acc-row .meta b{ font-size:14px; display:block; }
+  .acc-row .meta small{ color:var(--low); font-size:11.5px; }
+  .acc-row .badge-current{ background:rgba(61,220,151,.15); color:var(--ok); font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:8px; }
+  .acc-row .actions{ display:flex; gap:6px; }
+  .icon-btn{ width:32px; height:32px; border-radius:9px; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--mid); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; transition:.15s; }
+  .icon-btn:hover{ background:rgba(255,255,255,.1); color:var(--hi); }
+  .icon-btn.danger:hover{ background:rgba(255,77,109,.18); color:#ff8fa3; }
+  .hist-select-row{ display:flex; gap:10px; margin-bottom:16px; }
+  .hist-log{ display:flex; flex-direction:column; gap:9px; max-height:440px; overflow-y:auto; }
+  .hist-line{ font-size:12.5px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.03); border:1px solid var(--line-soft); }
+  .hist-line b{ color:var(--violet); margin-right:5px; }
+  .hist-line .t{ float:right; color:var(--low); font-size:10.5px; }
+
+  /* ============ MODALES ============ */
+  .modal-veil{ position:fixed; inset:0; background:rgba(4,3,10,.72); backdrop-filter:blur(6px); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-veil.show{ display:flex; }
+  .modal-box{ background:var(--panel-solid); border:1px solid var(--line); border-radius:22px; padding:28px; width:100%; max-width:420px; box-shadow:0 40px 90px rgba(0,0,0,.6); animation:riseIn .25s ease; max-height:86vh; overflow-y:auto; }
+  .modal-box h3{ font-size:17px; margin-bottom:4px; }
+  .modal-box .sub{ color:var(--low); font-size:12.5px; margin-bottom:18px; }
+  .modal-close-x{ float:right; cursor:pointer; color:var(--low); font-size:16px; }
+  .pp-header{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .pp-header b{ font-size:16px; display:block; }
+  .pp-header small{ color:var(--low); font-size:12px; }
+  .pp-bio{ font-size:13px; color:var(--mid); line-height:1.6; background:rgba(255,255,255,.04); padding:12px 14px; border-radius:12px; margin-bottom:14px; }
+  .pp-live-tag{ display:inline-flex; align-items:center; gap:6px; background:rgba(255,93,115,.15); color:var(--coral); font-size:11.5px; font-weight:800; padding:5px 11px; border-radius:9px; margin-bottom:12px; }
+
+  @media (max-width: 1180px){
+    :root{ --chat-w:310px; }
+  }
+  @media (max-width: 980px){
+    aside.rail{ display:none; }
+    .watch-wrap{ flex-direction:column; }
+    .chat-col{ width:100%; height:380px; }
+  }
+</style>
+</head>
+<body>
+    
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="orb orb4"></div>
+</div>
+<div class="noise-veil"></div>
+<div id="toast-stack"></div>
+
+<!-- ============ AUTENTICACIÓN ============ -->
+<div id="auth-screen">
+  <div class="auth-shell">
+    <div class="auth-visual">
+      <div>
+        <div class="brand"><i class="fa-solid fa-tower-broadcast">
+
+            
+        <a href="index.html" class="btn-home" id="homeBtn" > </i> AuraVivo</div>  </a>
+        <h2>Tu <span>directo</span>, tu escenario,<br>a un clic de empezar.</h2>
+        <div class="auth-pill-row">
+          <div class="auth-pill"><i class="fa-solid fa-comments"></i> Chat en vivo</div>
+          <div class="auth-pill"><i class="fa-solid fa-face-laugh"></i> Stickers</div>
+          <div class="auth-pill"><i class="fa-brands fa-whatsapp"></i> Regalos</div>
+          <div class="auth-pill"><i class="fa-solid fa-user-group"></i> Cuentas</div>  
+        </div>
+      </div>
+      
+      <div class="auth-mock">
+        <div class="dot"></div>
+        <span>3 directos activos ahora mismo en AuraVivo</span>
+      </div>
+    </div>
+    <div class="auth-form-side">
+      <div class="auth-tabs">
+        <div class="auth-tab active" data-tab="login" onclick="cambiarAuthTab('login')">Iniciar sesión</div>
+        <div class="auth-tab" data-tab="register" onclick="cambiarAuthTab('register')">Crear cuenta</div>
+      </div>
+
+      <form id="form-login" class="auth-form active" onsubmit="return manejarLogin(event)">
+        <div>
+          <label class="field-label">Usuario</label>
+          <input class="field-input" id="login-user" placeholder="tu_usuario" autocomplete="off" required>
+        </div>
+        <div>
+          <label class="field-label">Contraseña</label>
+          <input class="field-input" id="login-pass" type="password" placeholder="••••••••" required>
+          
+        </div>
+
+        
+        <button type="submit" class="btn btn-grad">Entrar a AuraVivo</button>
+        <p class="auth-note">¿Primera vez aquí? Crea tu cuenta en la pestaña "Crear cuenta". Tus datos se guardan de forma local en este navegador.</p>
+      </form>
+
+      <form id="form-register" class="auth-form" onsubmit="return manejarRegistro(event)">
+        <div>
+          <label class="field-label">Nombre para mostrar</label>
+          <input class="field-input" id="reg-display" placeholder="Ej: Camila Ríos" required>
+          
+        </div>
+        <div>
+          <label class="field-label">Usuario (único)</label>
+          <input class="field-input" id="reg-user" placeholder="Ej: camirios" required>
+        </div>
+        <div>
+          <label class="field-label">Contraseña</label>
+          <input class="field-input" id="reg-pass" type="password" placeholder="Mínimo 4 caracteres" required>
+        </div>
+        <button type="submit" class="btn btn-grad">Crear mi cuenta</button>
+        <p class="auth-note">Podrás crear varias cuentas en este mismo navegador y cambiar entre ellas desde el menú de cuentas.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header>
+    <div class="brand-mark" onclick="irVista('feed')">
+      <div class="brand-ico"><i class="fa-solid fa-tower-broadcast"></i></div>
+      AuraVivo
+    </div>
+    <div class="header-actions">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="buscador-input" placeholder="Buscar directos o personas..." oninput="renderizarFeed()">
+      </div>
+      <button class="btn btn-live-now" onclick="irVista('broadcast')"><i class="fa-solid fa-video"></i> Iniciar directo</button>
+      <div style="position:relative;">
+        <div class="acc-badge" onclick="toggleDropdown(event)">
+          <div class="avatar av-32" id="hdr-avatar"></div>
+          <span id="hdr-name">Usuario</span>
+          <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--low);"></i>
+          
+        </div>
+        <div class="dropdown" id="dropdown-cuenta">
+          <div class="dd-item" onclick="irVista('profile');cerrarDropdown();"><i class="fa-solid fa-user"></i> Mi perfil</div>
+          <div class="dd-item" onclick="irVista('accounts');cerrarDropdown();"><i class="fa-solid fa-user-group"></i> Cuentas guardadas</div>
+          <div class="dd-item" onclick="irVista('history');cerrarDropdown();"><i class="fa-solid fa-clock-rotate-left"></i> Historial de chat</div>
+          <div class="dd-sep"></div>
+          <div class="dd-item danger" onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="rail">
+      <div class="rail-title">En vivo ahora <span class="rail-count" id="rail-count">0</span></div>
+      <div class="rail-list" id="rail-list">
+        <div class="rail-empty">Nadie está transmitiendo todavía. ¡Sé el primero en salir en vivo!</div>
+      </div>
+    </aside>
+
+    <div class="stage">
+
+      <!-- FEED -->
+      <div class="view active" id="view-feed">
+        <div class="view-head">
+          <div>
+            <h1>Directos recomendados</h1>
+            <p>Explora lo que está pasando en AuraVivo en este momento</p>
+          </div>
+          <div class="chip-filters" id="filtro-categorias"></div>
+        </div>
+        <div class="card-grid" id="feed-grid"></div>
+      </div>
+
+      <!-- WATCH -->
+      <div class="view" id="view-watch">
+        <button class="btn-back" onclick="salirDeWatch()"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+        <div class="watch-wrap">
+          <div class="player-col">
+            <div class="player-box" id="player-box">
+              <div class="player-placeholder" id="player-placeholder"><i class="fa-solid fa-satellite-dish"></i><span>Conectando con el directo…</span></div>
+              <img class="frame-feed" id="frame-feed" style="display:none;">
+              <div class="player-topbar">
+                <div class="live-info-pill">
+                  <span class="tag-live"><span class="b"></span>EN VIVO</span>
+                  <span class="nm" id="watch-title-short">Directo</span>
+                </div>
+                <div class="pill-stats">
+                  <div class="stat-pill"><i class="fa-solid fa-eye"></i> <span id="watch-viewer-count">0</span></div>
+                </div>
+              </div>
+              <div id="floating-reactions"></div>
+            </div>
+            <div class="stream-meta-row">
+              <div>
+                <h2 id="watch-full-title">Título del directo</h2>
+                <div class="creator-line" id="watch-creator-line" onclick="abrirPerfilPublico(estado.viendoUsuario)">
+                  <div class="avatar av-40" id="watch-creator-avatar"></div>
+                  <div><b id="watch-creator-name">Creador</b><small id="watch-creator-cat">Categoría</small></div>
+                </div>
+              </div>
+              <button class="share-btn" onclick="compartirDirecto()"><i class="fa-solid fa-link"></i> Copiar enlace</button>
+            </div>
+          </div>
+
+          <div class="chat-col">
+            <div class="chat-top">
+              <b>Chat del directo</b>
+              <label class="switch"><input type="checkbox" id="chk-chat-activo" checked onchange="alternarChatActivo()"><span class="slider"></span></label>
+            </div>
+            <div class="chat-msgs" id="chat-msgs"></div>
+            <div class="jump-btn" id="jump-btn" onclick="bajarChatAlFinal(true)"><i class="fa-solid fa-arrow-down"></i> Nuevos mensajes</div>
+
+            <div class="popover" id="pop-emoji">
+              <div class="pop-head"><span>Reacciones</span><i class="fa-solid fa-xmark" onclick="cerrarPopovers()"></i></div>
+              <div class="emoji-grid" id="emoji-reacciones"></div>
+            </div>
+            <div class="popover" id="pop-sticker">
+              <div class="pop-head"><span>Stickers estilo WhatsApp</span><i class="fa-solid fa-xmark" onclick="cerrarPopovers()"></i></div>
+              <div class="sticker-row" id="sticker-row"></div>
+              <div style="display:flex; gap:6px;">
+                <input class="field-input" id="input-sticker-url" placeholder="Pega una URL de imagen para crear tu sticker" style="font-size:12px; padding:9px 11px;">
+                <button class="btn btn-ghost btn-sm" onclick="crearStickerPersonalizado()">Añadir</button>
+              </div>
+            </div>
+            <div class="popover" id="pop-gift">
+              <div class="pop-head"><span>Enviar regalo WP</span><i class="fa-solid fa-xmark" onclick="cerrarPopovers()"></i></div>
+              <div class="gift-grid" id="gift-grid"></div>
+            </div>
+
+            <div class="chat-toolbar">
+              <button class="tool-btn" title="Reacciones" onclick="togglePopover('pop-emoji')"><i class="fa-regular fa-face-smile"></i></button>
+              <button class="tool-btn" title="Stickers" onclick="togglePopover('pop-sticker')"><i class="fa-regular fa-note-sticky"></i></button>
+              <button class="tool-btn whats" title="Regalos" onclick="togglePopover('pop-gift')"><i class="fa-brands fa-whatsapp"></i></button>
+            </div>
+            <div class="chat-input-row" id="chat-input-row">
+              <input id="chat-input" placeholder="Escribe algo bonito o pega un link..." onkeypress="if(event.key==='Enter')enviarMensaje()">
+              <button class="btn-send" onclick="enviarMensaje()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BROADCAST -->
+      <div class="view" id="view-broadcast">
+        <button class="btn-back" onclick="salirDeBroadcast()"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+        <div class="broadcast-shell">
+
+          <div class="setup-card" id="broadcast-setup">
+            <h2>Configura tu directo</h2>
+            <div>
+              <label class="field-label">Título del directo</label>
+              <input class="field-input" id="bc-title" placeholder="Ej: Charlando y respondiendo preguntas ✨" maxlength="80">
+            </div>
+            <div>
+              <label class="field-label">Categoría</label>
+              <div class="cat-grid" id="bc-cat-grid"></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-grad" style="flex:1;" onclick="comenzarTransmision(false)"><i class="fa-solid fa-video"></i> Salir con cámara</button>
+              <button class="btn btn-ghost" style="flex:1; border-color:var(--violet);" onclick="comenzarTransmision(true)"><i class="fa-solid fa-desktop"></i> Compartir pantalla</button>
+            </div>
+            <p class="auth-note">Se pedirá permiso para usar tu cámara, micrófono o pantalla. Tu directo aparecerá en la lista para otras cuentas de este navegador.</p>
+          </div>
+
+          <div class="broadcast-live-box" id="broadcast-live-box" style="display:none;">
+            <div class="player-box" style="aspect-ratio:16/9;">
+              <video id="mi-camara" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+              <div class="player-topbar">
+                <div class="live-info-pill"><span class="tag-live"><span class="b"></span>EN VIVO</span></div>
+                <div class="pill-stats"><div class="stat-pill"><i class="fa-solid fa-eye"></i> <span id="bc-viewer-count">0</span></div></div>
+              </div>
+              <div id="floating-reactions-bc"></div>
+            </div>
+            <div class="bc-timer"><span class="b"></span> <span id="bc-timer-txt">00:00</span> transmitiendo como <b id="bc-nombre-actual" style="margin-left:3px;"></b></div>
+            <div class="bc-controls">
+              <button class="icon-toggle" id="btn-toggle-mic" onclick="alternarMic()" title="Silenciar micrófono"><i class="fa-solid fa-microphone"></i></button>
+              <button class="icon-toggle" id="btn-toggle-cam" onclick="alternarCam()" title="Apagar cámara"><i class="fa-solid fa-video"></i></button>
+              <button class="btn btn-danger" onclick="finalizarTransmision()"><i class="fa-solid fa-stop"></i> Finalizar directo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE / ACCOUNTS / HISTORY -->
+      <div class="view" id="view-profile-group">
+        <button class="btn-back" onclick="irVista('feed')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+        <div class="tabbed-head">
+          <div class="t active" data-sv="sv-profile" onclick="cambiarSubvista('sv-profile')">Mi perfil</div>
+          <div class="t" data-sv="sv-accounts" onclick="cambiarSubvista('sv-accounts')">Cuentas guardadas</div>
+          <div class="t" data-sv="sv-history" onclick="cambiarSubvista('sv-history')">Historial de chat</div>
+        </div>
+
+        <div class="subview active" id="sv-profile">
+          <div class="panel-box">
+            <div class="profile-top">
+              <div class="avatar-upload" onclick="document.getElementById('avatar-file').click()">
+                <div class="avatar av-88" id="profile-avatar-big"></div>
+                <div class="edit-badge"><i class="fa-solid fa-camera" style="font-size:10px;"></i></div>
+              </div>
+              <input type="file" id="avatar-file" accept="image/*" style="display:none" onchange="subirAvatar(event)">
+              <div>
+                <h2 id="profile-name-big" style="font-size:20px;">Nombre</h2>
+                <p style="color:var(--low); font-size:12.5px;" id="profile-user-big">@usuario</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-row-2">
+                <div>
+                  <label class="field-label">Nombre para mostrar</label>
+                  <input class="field-input" id="edit-display">
+                </div>
+                <div>
+                  <label class="field-label">Usuario</label>
+                  <input class="field-input" id="edit-user-locked" disabled style="opacity:.55;">
+                </div>
+              </div>
+              <div>
+                <label class="field-label">Descripción / biografía</label>
+                <textarea class="field-input" id="edit-bio" placeholder="Cuéntale algo a quienes visiten tu perfil..."></textarea>
+              </div>
+              <div>
+                <label class="field-label">Nueva contraseña (opcional)</label>
+                <input class="field-input" id="edit-pass" type="password" placeholder="Dejar en blanco para no cambiarla">
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn btn-grad" style="flex:1;" onclick="guardarPerfil()"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+                <button class="btn btn-danger" onclick="pedirEliminarCuenta(estado.usuario)"><i class="fa-solid fa-trash"></i> Eliminar cuenta</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subview" id="sv-accounts">
+          <div class="panel-box">
+            <h2 style="margin-bottom:4px;">Cuentas creadas en este navegador</h2>
+            <p style="color:var(--low); font-size:12.5px; margin-bottom:18px;">Cambia rápidamente de sesión entre tus cuentas guardadas.</p>
+            <div id="accounts-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+          </div>
+        </div>
+
+        <div class="subview" id="sv-history">
+          <div class="panel-box">
+            <h2 style="margin-bottom:4px;">Historial de comentarios</h2>
+            <p style="color:var(--low); font-size:12.5px; margin-bottom:16px;">Todo lo que se ha escrito, quedó guardado por directo.</p>
+            <div class="hist-select-row">
+              <select class="field-input" id="hist-select" onchange="renderHistorial()"></select>
+            </div>
+            <div class="hist-log" id="hist-log"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PERFIL PÚBLICO -->
+<div class="modal-veil" id="modal-perfil-publico">
+  <div class="modal-box">
+    <i class="fa-solid fa-xmark modal-close-x" onclick="cerrarModal('modal-perfil-publico')"></i>
+    <div class="pp-header">
+      <div class="avatar av-56" id="pp-avatar"></div>
+      <div><b id="pp-name"></b><small id="pp-user"></small></div>
+    </div>
+    <div id="pp-live-wrap"></div>
+    <div class="pp-bio" id="pp-bio">Este usuario no ha escrito una biografía todavía.</div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR ELIMINAR -->
+<div class="modal-veil" id="modal-confirmar">
+  <div class="modal-box" style="max-width:360px; text-align:center;">
+    <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,77,109,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+      <i class="fa-solid fa-triangle-exclamation" style="color:var(--danger); font-size:20px;"></i>
+    </div>
+   
+    
+
+<script>
+/* =========================================================================
+   AURAVIVO — Plataforma de directos, front-end 100% autocontenido.
+   No requiere servidor: usa localStorage para persistencia (cuentas,
+   perfiles, directos e historial de chat) y BroadcastChannel para
+   sincronizar en tiempo real entre pestañas del mismo navegador.
+   ========================================================================= */
+
+const K_ACCOUNTS = 'av_accounts_v1';
+const K_SESSION  = 'av_session_v1';
+const K_STREAMS  = 'av_streams_v1';
+const K_STICKERS = 'av_stickers_v1';
+const K_CHAT_PREFIX = 'av_chat_v1_';
+const K_STREAM_INDEX = 'av_stream_index_v1';
+
+const CATEGORIAS = [
+  { id:'charla', label:'Charla', icon:'fa-comments' },
+  { id:'musica', label:'Música', icon:'fa-music' },
+  { id:'arte', label:'Arte', icon:'fa-palette' },
+  { id:'juegos', label:'Juegos', icon:'fa-gamepad' },
+  { id:'cocina', label:'Cocina', icon:'fa-utensils' },
+  { id:'otro', label:'Otro', icon:'fa-star' },
+];
+
+const EMOJIS_REACCION = ['❤️','😂','🔥','👏','😮','💯','🎉','😍','👍','😢','😎','🙌','✨','🥳','😅','🤯'];
+
+const STICKERS_DEFECTO = [
+  'https://api.iconify.design/fluent-emoji/fire.svg',
+  'https://api.iconify.design/fluent-emoji/clapping-hands.svg',
+  'https://api.iconify.design/fluent-emoji/rocket.svg',
+  'https://api.iconify.design/fluent-emoji/grinning-face-with-star-eyes.svg',
+  'https://api.iconify.design/fluent-emoji/red-heart.svg',
+  'https://api.iconify.design/fluent-emoji/thumbs-up.svg',
+  'https://api.iconify.design/fluent-emoji/party-popper.svg',
+  'https://api.iconify.design/fluent-emoji/loudly-crying-face.svg',
+];
+
+const REGALOS_WP = [
+  { id:'corazon', label:'Corazón WP', color:'#25D366' },
+  { id:'estrella', label:'Estrella WP', color:'#FFB648' },
+  { id:'fuego', label:'Fuego WP', color:'#FF5D73' },
+  { id:'diamante', label:'Diamante WP', color:'#2DD9D0' },
+];
+
+const estado = {
+  usuario: null,
+  streams: {},
+  viendoId: null,
+  viendoUsuario: null,
+  transmitiendo: false,
+  miStreamId: null,
+  miMediaStream: null,
+  frameTimer: null,
+  chatActivo: true,
+  autoScroll: true,
+  filtroCategoria: 'todos',
+  bcCategoriaSel: 'charla',
+  bcTimerHandle: null,
+  bcStartTs: null,
+};
+
+let bus = null;
+try { bus = new BroadcastChannel('auravivo_bus'); } catch(e){ console.warn('BroadcastChannel no disponible', e); }
+
+function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+function $(id){ return document.getElementById(id); }
+function escapeHtml(t){ if(!t) return ''; return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function linkify(text){
+  const re = /(https?:\/\/[^\s]+)/g;
+  return text.replace(re, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+}
+function iniciales(nombre){ return (nombre||'?').trim().charAt(0).toUpperCase(); }
+function fmtHora(ts){ const d = new Date(ts); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
+function fmtFechaHora(ts){ const d = new Date(ts); return d.toLocaleDateString()+' '+fmtHora(ts); }
+function toast(msg, tipo){
+  const el = document.createElement('div');
+  el.className = 'toast' + (tipo ? ' '+tipo : '');
+  const ic = tipo==='err' ? 'fa-circle-exclamation' : tipo==='ok' ? 'fa-circle-check' : 'fa-circle-info';
+  el.innerHTML = `<i class="fa-solid ${ic}"></i> ${escapeHtml(msg)}`;
+  $('toast-stack').appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 2600);
+}
+function obscurecer(pass){ try{ return btoa(unescape(encodeURIComponent(pass))); }catch(e){ return pass; } }
+
+function avatarStyle(cuentaOrDataUrl, nombre){
+  let dataUrl = null;
+  if (cuentaOrDataUrl && typeof cuentaOrDataUrl === 'object') dataUrl = cuentaOrDataUrl.avatar;
+  else if (typeof cuentaOrDataUrl === 'string' && cuentaOrDataUrl.startsWith('data:')) dataUrl = cuentaOrDataUrl;
+  return dataUrl ? { css:`background-image:url('${dataUrl}')`, letra:'' } : { css:'', letra: iniciales(nombre) };
+}
+function pintarAvatar(el, cuentaOrDataUrl, nombre){
+  const r = avatarStyle(cuentaOrDataUrl, nombre);
+  el.setAttribute('style', (el.getAttribute('style')||'').replace(/background-image:[^;]+;?/,'') + ';' + r.css);
+  el.textContent = r.letra;
+}
+
+function cargarCuentas(){ try{ return JSON.parse(localStorage.getItem(K_ACCOUNTS)) || {}; }catch(e){ return {}; } }
+function guardarCuentas(obj){ localStorage.setItem(K_ACCOUNTS, JSON.stringify(obj)); }
+function obtenerCuenta(username){ return cargarCuentas()[username?.toLowerCase()] || null; }
+
+function registrarCuenta(displayName, username, pass){
+  const key = username.trim().toLowerCase();
+  if(!key || !displayName.trim() || !pass) return { ok:false, msg:'Completa todos los campos.' };
+  if(pass.length < 4) return { ok:false, msg:'La contraseña debe tener al menos 4 caracteres.' };
+  const cuentas = cargarCuentas();
+  if(cuentas[key]) return { ok:false, msg:'Ese nombre de usuario ya existe.' };
+  cuentas[key] = {
+    username:key,
+    displayName: displayName.trim(),
+    passHash: obscurecer(pass),
+    avatar:null,
+    bio:'',
+    createdAt: Date.now()
+  };
+  guardarCuentas(cuentas);
+  return { ok:true };
+}
+function validarLogin(username, pass){
+  const c = obtenerCuenta(username);
+  if(!c) return { ok:false, msg:'No existe esa cuenta. ¿Quieres crearla?' };
+  if(c.passHash !== obscurecer(pass)) return { ok:false, msg:'Contraseña incorrecta.' };
+  return { ok:true, cuenta:c };
+}
+function actualizarCuenta(username, cambios){
+  const cuentas = cargarCuentas();
+  const key = username.toLowerCase();
+  if(!cuentas[key]) return;
+  cuentas[key] = Object.assign(cuentas[key], cambios);
+  guardarCuentas(cuentas);
+}
+function eliminarCuenta(username){
+  const cuentas = cargarCuentas();
+  delete cuentas[username.toLowerCase()];
+  guardarCuentas(cuentas);
+}
+
+function iniciarSesionComo(username){
+  estado.usuario = username.toLowerCase();
+  localStorage.setItem(K_SESSION, estado.usuario);
+  montarApp();
+}
+function cerrarSesion(){
+  finalizarTransmisionSilenciosa();
+  estado.usuario = null;
+  localStorage.removeItem(K_SESSION);
+  cerrarDropdown();
+  $('app').classList.remove('show');
+  $('app').style.display = 'none';
+  $('auth-screen').style.display = 'flex';
+  toast('Sesión cerrada', 'ok');
+}
+
+function cargarStreams(){ try{ return JSON.parse(localStorage.getItem(K_STREAMS)) || {}; }catch(e){ return {}; } }
+function guardarStreamsGlobal(obj){ localStorage.setItem(K_STREAMS, JSON.stringify(obj)); }
+function indiceStreams(){ try{ return JSON.parse(localStorage.getItem(K_STREAM_INDEX)) || []; }catch(e){ return []; } }
+function agregarAIndice(id){ const idx = indiceStreams(); if(!idx.includes(id)){ idx.push(id); localStorage.setItem(K_STREAM_INDEX, JSON.stringify(idx)); } }
+
+function guardarStreamPersistente(s){
+  const all = cargarStreams();
+  all[s.id] = { id:s.id, username:s.username, displayName:s.displayName, title:s.title, categoria:s.categoria, startedAt:s.startedAt };
+  guardarStreamsGlobal(all);
+  agregarAIndice(s.id);
+}
+function quitarStreamPersistente(id){
+  const all = cargarStreams();
+  delete all[id];
+  guardarStreamsGlobal(all);
+}
+
+function cargarChat(streamId){ try{ return JSON.parse(localStorage.getItem(K_CHAT_PREFIX+streamId)) || []; }catch(e){ return []; } }
+function guardarChat(streamId, arr){
+  if(arr.length > 400) arr = arr.slice(arr.length-400);
+  localStorage.setItem(K_CHAT_PREFIX+streamId, JSON.stringify(arr));
+}
+function agregarMensajeAlHistorial(streamId, msg){
+  const arr = cargarChat(streamId);
+  arr.push(msg);
+  guardarChat(streamId, arr);
+}
+
+function cargarStickers(){ try{ return JSON.parse(localStorage.getItem(K_STICKERS)) || []; }catch(e){ return []; } }
+function guardarStickers(arr){ localStorage.setItem(K_STICKERS, JSON.stringify(arr)); }
+
+window.addEventListener('DOMContentLoaded', () => {
+  poblarCategoriasFiltro();
+  poblarCategoriasBroadcast();
+  poblarEmojis();
+  poblarStickers();
+  poblarRegalos();
+
+  const sesion = localStorage.getItem(K_SESSION);
+  if(sesion && obtenerCuenta(sesion)){
+    estado.usuario = sesion;
+    montarApp();
+  }
+
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.acc-badge')) cerrarDropdown();
+  });
+});
+
+window.addEventListener('beforeunload', ()=>{
+  finalizarTransmisionSilenciosa();
+});
+
+function montarApp(){
+  $('auth-screen').style.display = 'none';
+  $('app').style.display = 'flex';
+  requestAnimationFrame(()=> $('app').classList.add('show'));
+
+  estado.streams = cargarStreams();
+  Object.values(estado.streams).forEach(s=>{ s.viewers = new Set(); s.lastFrame = null; s.lastHeartbeat = Date.now(); });
+
+  actualizarBadgeUsuario();
+  renderizarSidebar();
+  renderizarFeed();
+  irVista('feed');
+
+  if(bus) bus.postMessage({ type:'request_state' });
+
+  setInterval(limpiarStreamsInactivos, 5000);
+}
+
+function actualizarBadgeUsuario(){
+  const c = obtenerCuenta(estado.usuario);
+  if(!c) return;
+  pintarAvatar($('hdr-avatar'), c, c.displayName);
+  $('hdr-name').textContent = c.displayName;
+}
+
+function cambiarAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  $('form-login').classList.toggle('active', tab==='login');
+  $('form-register').classList.toggle('active', tab==='register');
+}
+function manejarLogin(e){
+  e.preventDefault();
+  const u = $('login-user').value.trim();
+  const p = $('login-pass').value;
+  const r = validarLogin(u,p);
+  if(!r.ok){ toast(r.msg, 'err'); return false; }
+  toast('¡Bienvenido de nuevo, '+r.cuenta.displayName+'!', 'ok');
+  iniciarSesionComo(u);
+  return false;
+}
+function manejarRegistro(e){
+  e.preventDefault();
+  const d = $('reg-display').value;
+  const u = $('reg-user').value;
+  const p = $('reg-pass').value;
+  const r = registrarCuenta(d,u,p);
+  if(!r.ok){ toast(r.msg, 'err'); return false; }
+  toast('Cuenta creada con éxito. ¡Bienvenido/a!', 'ok');
+  iniciarSesionComo(u);
+  return false;
+}
+
+function toggleDropdown(e){ e.stopPropagation(); $('dropdown-cuenta').classList.toggle('show'); }
+function cerrarDropdown(){ $('dropdown-cuenta').classList.remove('show'); }
+
+function irVista(nombre){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  if(nombre==='feed'){
+    $('view-feed').classList.add('active');
+    if(estado.viendoId) salirDeWatch(true);
+    renderizarFeed();
+  } else if(nombre==='watch'){
+    $('view-watch').classList.add('active');
+  } else if(nombre==='broadcast'){
+    $('view-broadcast').classList.add('active');
+  } else if(nombre==='profile' || nombre==='accounts' || nombre==='history'){
+    $('view-profile-group').classList.add('active');
+    const map = { profile:'sv-profile', accounts:'sv-accounts', history:'sv-history' };
+    cambiarSubvista(map[nombre]);
+    if(nombre==='profile') cargarFormularioPerfil();
+    if(nombre==='accounts') renderizarListaCuentas();
+    if(nombre==='history') renderizarSelectorHistorial();
+  }
+}
+function cambiarSubvista(id){
+  document.querySelectorAll('.tabbed-head .t').forEach(t=>t.classList.toggle('active', t.dataset.sv===id));
+  document.querySelectorAll('.subview').forEach(s=>s.classList.toggle('active', s.id===id));
+  if(id==='sv-profile') cargarFormularioPerfil();
+  if(id==='sv-accounts') renderizarListaCuentas();
+  if(id==='sv-history') renderizarSelectorHistorial();
+}
+
+function poblarCategoriasFiltro(){
+  const cont = $('filtro-categorias');
+  let html = `<div class="chip active" data-cat="todos" onclick="filtrarCategoria('todos')">Todos</div>`;
+  CATEGORIAS.forEach(c=> html += `<div class="chip" data-cat="${c.id}" onclick="filtrarCategoria('${c.id}')">${c.label}</div>`);
+  cont.innerHTML = html;
+}
+function filtrarCategoria(cat){
+  estado.filtroCategoria = cat;
+  document.querySelectorAll('#filtro-categorias .chip').forEach(c=>c.classList.toggle('active', c.dataset.cat===cat));
+  renderizarFeed();
+}
+function poblarCategoriasBroadcast(){
+  const cont = $('bc-cat-grid');
+  cont.innerHTML = CATEGORIAS.map(c=>`<div class="cat-opt ${c.id==='charla'?'active':''}" data-cat="${c.id}" onclick="seleccionarCategoriaBc('${c.id}')"><i class="fa-solid ${c.icon}"></i>${c.label}</div>`).join('');
+}
+function seleccionarCategoriaBc(cat){
+  estado.bcCategoriaSel = cat;
+  document.querySelectorAll('#bc-cat-grid .cat-opt').forEach(c=>c.classList.toggle('active', c.dataset.cat===cat));
+}
+function poblarEmojis(){
+  $('emoji-reacciones').innerHTML = EMOJIS_REACCION.map(em=>`<button onclick="enviarReaccion('${em}')">${em}</button>`).join('');
+}
+function poblarStickers(){
+  const custom = cargarStickers().map(s=>s.url);
+  const todos = STICKERS_DEFECTO.concat(custom);
+  $('sticker-row').innerHTML = todos.map(url=>`<img src="${url}" onclick="enviarSticker('${url}')">`).join('');
+}
+function poblarRegalos(){
+  $('gift-grid').innerHTML = REGALOS_WP.map(g=>`
+    <div class="gift-item" onclick="enviarRegalo('${g.id}')">
+      <div class="gift-ic" style="background:${g.color}"><i class="fa-brands fa-whatsapp"></i></div>
+      <div><b>${g.label}</b><small>Regalo animado</small></div>
+    </div>`).join('');
+}
+
+function listaStreamsActivos(){
+  return Object.values(estado.streams).sort((a,b)=> b.startedAt - a.startedAt);
+}
+function renderizarSidebar(){
+  const lives = listaStreamsActivos();
+  $('rail-count').textContent = lives.length;
+  const cont = $('rail-list');
+  if(lives.length === 0){
+    cont.innerHTML = `<div class="rail-empty">Nadie está transmitiendo todavía. ¡Sé el primero en salir en vivo!</div>`;
+    return;
+  }
+  cont.innerHTML = lives.map(s=>{
+    const av = avatarStyle(s.avatar, s.displayName);
+    return `<div class="rail-item" onclick="entrarADirecto('${s.id}')">
+      <div class="ring"><div class="avatar av-40" style="${av.css}">${av.letra}</div></div>
+      <div class="rail-meta">
+        <div class="rail-name">${escapeHtml(s.displayName)}</div>
+        <div class="rail-sub"><span class="dot-live"></span>${escapeHtml(s.title||'En directo')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderizarFeed(){
+  const lives = listaStreamsActivos().filter(s=>{
+    if(estado.filtroCategoria!=='todos' && s.categoria !== estado.filtroCategoria) return false;
+    const q = ($('buscador-input')?.value || '').trim().toLowerCase();
+    if(!q) return true;
+    return (s.title||'').toLowerCase().includes(q) || (s.displayName||'').toLowerCase().includes(q) || (s.username||'').toLowerCase().includes(q);
+  });
+  const grid = $('feed-grid');
+  if(lives.length === 0){
+    grid.innerHTML = `<div class="empty-block" style="grid-column:1/-1;">
+      <i class="fa-solid fa-satellite-dish"></i>
+      <h3>Todo tranquilo por aquí</h3>
+      <p>No hay directos disponibles ahora mismo. Abre otra pestaña con otra cuenta y sal en vivo para probarlo, o espera a que alguien empiece a transmitir.</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = lives.map(s=>{
+    const cat = CATEGORIAS.find(c=>c.id===s.categoria) || CATEGORIAS[CATEGORIAS.length-1];
+    const av = avatarStyle(s.avatar, s.displayName);
+    const thumb = s.lastFrame
+      ? `<img src="${s.lastFrame}">`
+      : `<div class="thumb-fallback"><i class="fa-solid ${cat.icon}"></i><span style="font-size:11px;">Vista previa en directo</span></div>`;
+    return `<div class="live-card" onclick="entrarADirecto('${s.id}')">
+      <div class="thumb">
+        ${thumb}
+        <div class="tag-live"><span class="b"></span>EN VIVO</div>
+        <div class="tag-viewers"><i class="fa-solid fa-eye"></i> ${s.viewers ? s.viewers.size : 0}</div>
+        <div class="tag-cat">${cat.label}</div>
+      </div>
+      <div class="card-body">
+        <div class="avatar av-40" style="${av.css}">${av.letra}</div>
+        <div>
+          <h3>${escapeHtml(s.title || 'Directo sin título')}</h3>
+          <p>${escapeHtml(s.displayName)}</p>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function limpiarStreamsInactivos(){
+  const ahora = Date.now();
+  let cambio = false;
+  Object.keys(estado.streams).forEach(id=>{
+    const s = estado.streams[id];
+    if(ahora - (s.lastHeartbeat||0) > 9000){
+      delete estado.streams[id];
+      cambio = true;
+      if(estado.viendoId === id){
+        toast('El directo ha finalizado.', 'err');
+        salirDeWatch(true);
+        irVista('feed');
+      }
+    }
+  });
+  if(cambio){ renderizarSidebar(); renderizarFeed(); }
+}
+
+function entrarADirecto(id){
+  const s = estado.streams[id];
+  if(!s){ toast('Este directo ya no está disponible.', 'err'); return; }
+  if(estado.viendoId) salirDeWatch(true);
+
+  estado.viendoId = id;
+  estado.viendoUsuario = s.username;
+  irVista('watch');
+
+  $('watch-full-title').textContent = s.title || 'Directo sin título';
+  $('watch-title-short').textContent = '@'+s.username;
+  $('watch-creator-name').textContent = s.displayName;
+  const cat = CATEGORIAS.find(c=>c.id===s.categoria) || CATEGORIAS[CATEGORIAS.length-1];
+  $('watch-creator-cat').textContent = cat.label;
+  pintarAvatar($('watch-creator-avatar'), s.avatar, s.displayName);
+
+  $('player-placeholder').style.display = 'flex';
+  $('frame-feed').style.display = 'none';
+
+  s.viewers = s.viewers || new Set();
+  s.viewers.add(estado.usuario);
+  actualizarContadorViewers();
+
+  cargarYRenderizarChat(id);
+
+  if(bus) bus.postMessage({ type:'viewer_join', streamId:id, username:estado.usuario });
+
+  if(s.lastFrame) mostrarFrame(s.lastFrame);
+
+  if(estado.transmitiendo && estado.miStreamId === id && estado.miMediaStream){
+    mostrarPropioStreamEnWatch();
+  }
+}
+function mostrarPropioStreamEnWatch(){
+  $('player-placeholder').style.display = 'none';
+  const img = $('frame-feed');
+  img.style.display = 'none';
+  let vid = document.getElementById('watch-self-video');
+  if(!vid){
+    vid = document.createElement('video');
+    vid.id = 'watch-self-video';
+    vid.autoplay = true; vid.playsInline = true; vid.muted = true;
+    vid.style.width='100%'; vid.style.height='100%'; vid.style.objectFit='cover';
+    $('player-box').insertBefore(vid, $('player-box').firstChild);
+  }
+  vid.style.display='block';
+  vid.srcObject = estado.miMediaStream;
+}
+function mostrarFrame(dataUrl){
+  const selfVid = document.getElementById('watch-self-video');
+  if(selfVid) return;
+  $('player-placeholder').style.display = 'none';
+  const img = $('frame-feed');
+  img.src = dataUrl;
+  img.style.display = 'block';
+}
+function actualizarContadorViewers(){
+  const s = estado.streams[estado.viendoId];
+  if(s) $('watch-viewer-count').textContent = s.viewers ? s.viewers.size : 0;
+  const sMine = estado.miStreamId ? estado.streams[estado.miStreamId] : null;
+  if(sMine) $('bc-viewer-count').textContent = sMine.viewers ? sMine.viewers.size : 0;
+}
+function salirDeWatch(silencioso){
+  const selfVid = document.getElementById('watch-self-video');
+  if(selfVid) selfVid.remove();
+  if(estado.viendoId){
+    const s = estado.streams[estado.viendoId];
+    if(s && s.viewers) s.viewers.delete(estado.usuario);
+    if(bus) bus.postMessage({ type:'viewer_leave', streamId:estado.viendoId, username:estado.usuario });
+  }
+  estado.viendoId = null;
+  estado.viendoUsuario = null;
+  if(!silencioso) irVista('feed');
+}
+function compartirDirecto(){
+  const s = estado.streams[estado.viendoId];
+  if(!s) return;
+  const url = location.href.split('#')[0] + '#directo-' + s.id;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=> toast('Enlace copiado al portapapeles', 'ok'));
+  } else {
+    toast('Enlace: '+url, 'ok');
+  }
+}
+
+async function comenzarTransmision(compartirPantalla = false){
+  const titulo = $('bc-title').value.trim() || 'Directo sin título';
+  const cuenta = obtenerCuenta(estado.usuario);
+
+  let stream;
+  try{
+    if (compartirPantalla) {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: true });
+    } else {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720, frameRate: 30 }, audio: true });
+    }
+  }catch(err){
+    toast('No se pudo acceder a los recursos multimedia (cámara/pantalla/micrófono).', 'err');
+    return;
+  }
+
+  const id = uid('live');
+  estado.transmitiendo = true;
+  estado.miStreamId = id;
+  estado.miMediaStream = stream;
+
+  const s = {
+    id, username:estado.usuario, displayName:cuenta.displayName, avatar:cuenta.avatar,
+    title:titulo, categoria:estado.bcCategoriaSel, startedAt:Date.now(),
+    viewers:new Set(), lastFrame:null, lastHeartbeat:Date.now()
+  };
+  estado.streams[id] = s;
+  guardarStreamPersistente(s);
+  renderizarSidebar(); renderizarFeed();
+
+  if(bus) bus.postMessage({ type:'stream_start', stream: serializarStream(s) });
+
+  $('broadcast-setup').style.display = 'none';
+  $('broadcast-live-box').style.display = 'flex';
+  $('bc-nombre-actual').textContent = '@'+estado.usuario;
+  
+  const videoElem = $('mi-camara');
+  videoElem.srcObject = stream;
+  // Solo aplicar efecto espejo si es cámara web, no para compartir pantalla
+  videoElem.style.transform = compartirPantalla ? 'none' : 'scaleX(-1)';
+
+  const inicioBc = Date.now();
+  estado.bcStartTs = inicioBc;
+  estado.bcTimerHandle = setInterval(()=>{
+    const seg = Math.floor((Date.now()-inicioBc)/1000);
+    const mm = Math.floor(seg/60).toString().padStart(2,'0');
+    const ss = (seg%60).toString().padStart(2,'0');
+    $('bc-timer-txt').textContent = mm+':'+ss;
+  }, 100);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 480; canvas.height = 270;
+  const ctx = canvas.getContext('2d');
+  
+  // Rendimiento optimizado: intervalo de fotogramas espaciado a 500ms (2 FPS) para evitar congelamientos o saturación de localStorage/BroadcastChannel
+  estado.frameTimer = setInterval(()=>{
+    if(!estado.transmitiendo || !estado.miMediaStream) return;
+    try{
+      if(videoElem.readyState >= 2){
+        ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+        s.lastFrame = dataUrl;
+        s.lastHeartbeat = Date.now();
+        if(bus) bus.postMessage({ type:'frame_update', streamId:id, dataUrl });
+      }
+    }catch(e){ console.warn(e); }
+  }, 500);
+
+  // Si el usuario detiene la pantalla compartida desde los controles del navegador
+  stream.getVideoTracks()[0].onended = () => {
+    finalizarTransmision();
+  };
+
+  toast('¡Estás transmitiendo en vivo!', 'ok');
+}
+
+function finalizarTransmision(){
+  if(!estado.transmitiendo) return;
+  finalizarTransmisionSilenciosa();
+  $('broadcast-live-box').style.display = 'none';
+  $('broadcast-setup').style.display = 'flex';
+  $('bc-title').value = '';
+  irVista('feed');
+  toast('Directo finalizado', 'ok');
+}
+
+function finalizarTransmisionSilenciosa(){
+  if(!estado.transmitiendo) return;
+  estado.transmitiendo = false;
+  if(estado.bcTimerHandle) clearInterval(estado.bcTimerHandle);
+  if(estado.frameTimer) clearInterval(estado.frameTimer);
+  if(estado.miMediaStream){
+    estado.miMediaStream.getTracks().forEach(t=>t.stop());
+    estado.miMediaStream = null;
+  }
+  if(estado.miStreamId){
+    const id = estado.miStreamId;
+    delete estado.streams[id];
+    quitarStreamPersistente(id);
+    if(bus) bus.postMessage({ type:'stream_end', streamId:id });
+    estado.miStreamId = null;
+  }
+  renderizarSidebar();
+  renderizarFeed();
+}
+
+function salirDeBroadcast(){
+  if(estado.transmitiendo){
+    if(confirm('¿Quieres finalizar el directo actual antes de salir?')){
+      finalizarTransmision();
+    } else {
+      irVista('feed');
+    }
+  } else {
+    irVista('feed');
+  }
+}
+
+function alternarMic(){
+  if(!estado.miMediaStream) return;
+  const track = estado.miMediaStream.getAudioTracks()[0];
+  if(!track) return;
+  track.enabled = !track.enabled;
+  const btn = $('btn-toggle-mic');
+  btn.classList.toggle('off', !track.enabled);
+  btn.innerHTML = track.enabled ? '<i class="fa-solid fa-microphone"></i>' : '<i class="fa-solid fa-microphone-slash"></i>';
+}
+
+function alternarCam(){
+  if(!estado.miMediaStream) return;
+  const track = estado.miMediaStream.getVideoTracks()[0];
+  if(!track) return;
+  track.enabled = !track.enabled;
+  const btn = $('btn-toggle-cam');
+  btn.classList.toggle('off', !track.enabled);
+  btn.innerHTML = track.enabled ? '<i class="fa-solid fa-video"></i>' : '<i class="fa-solid fa-video-slash"></i>';
+}
+
+function serializarStream(s){
+  return { id:s.id, username:s.username, displayName:s.displayName, avatar:s.avatar, title:s.title, categoria:s.categoria, startedAt:s.startedAt };
+}
+
+/* =========================================================================
+   CHAT Y MENSAJERÍA
+   ========================================================================= */
+function alternarChatActivo(){
+  estado.chatActivo = $('chk-chat-activo').checked;
+  const row = $('chat-input-row');
+  row.style.opacity = estado.chatActivo ? '1' : '0.4';
+  row.style.pointerEvents = estado.chatActivo ? 'auto' : 'none';
+}
+
+function cargarYRenderizarChat(streamId){
+  const cont = $('chat-msgs');
+  const arr = cargarChat(streamId);
+  cont.innerHTML = arr.map(m=>renderizarHtmlMensaje(m)).join('');
+  bajarChatAlFinal(true);
+}
+
+function renderizarHtmlMensaje(m){
+  const ts = fmtHora(m.ts);
+  if(m.tipo === 'sistema'){
+    return `<div class="msg-row system"><span>${escapeHtml(m.texto)}</span><span class="ts">${ts}</span></div>`;
+  }
+  if(m.tipo === 'gift'){
+    return `<div class="msg-row gift-row">
+      <i class="fa-brands fa-whatsapp"></i>
+      <div><b>${escapeHtml(m.usuario)}</b> envió un regalo: <b>${escapeHtml(m.nombreRegalo)}</b></div>
+      <span class="ts" style="margin-left:auto;">${ts}</span>
+    </div>`;
+  }
+  if(m.tipo === 'sticker'){
+    return `<div class="msg-row">
+      <span class="who" onclick="abrirPerfilPublico('${m.username}')">${escapeHtml(m.usuario)}:</span>
+      <img class="sticker-img" src="${m.url}">
+      <span class="ts">${ts}</span>
+    </div>`;
+  }
+  return `<div class="msg-row">
+    <span class="who" onclick="abrirPerfilPublico('${m.username}')">${escapeHtml(m.usuario)}:</span>
+    <span class="txt">${linkify(escapeHtml(m.texto))}</span>
+    <span class="ts">${ts}</span>
+  </div>`;
+}
+
+function enviarMensaje(){
+  if(!estado.chatActivo || !estado.viendoId) return;
+  const input = $('chat-input');
+  const texto = input.value.trim();
+  if(!texto) return;
+  input.value = '';
+
+  const cuenta = obtenerCuenta(estado.usuario);
+  const msg = { tipo:'texto', username:estado.usuario, usuario:cuenta.displayName, texto, ts:Date.now() };
+
+  agregarMensajeAlHistorial(estado.viendoId, msg);
+  appendMensajeChat(msg);
+
+  if(bus) bus.postMessage({ type:'chat_msg', streamId:estado.viendoId, msg });
+}
+
+function appendMensajeChat(m){
+  const cont = $('chat-msgs');
+  const div = document.createElement('div');
+  div.innerHTML = renderizarHtmlMensaje(m);
+  cont.appendChild(div.firstElementChild);
+  if(estado.autoScroll) bajarChatAlFinal();
+}
+
+function bajarChatAlFinal(forzar){
+  const cont = $('chat-msgs');
+  cont.scrollTop = cont.scrollHeight;
+  if(forzar) $('jump-btn').style.display = 'none';
+}
+
+$('chat-msgs')?.addEventListener('scroll', ()=>{
+  const cont = $('chat-msgs');
+  const dist = cont.scrollHeight - cont.scrollTop - cont.clientHeight;
+  estado.autoScroll = dist < 70;
+  $('jump-btn').style.display = estado.autoScroll ? 'none' : 'flex';
+});
+
+function togglePopover(popId){
+  const el = $(popId);
+  const abrir = !el.classList.contains('show');
+  cerrarPopovers();
+  if(abrir) el.classList.add('show');
+}
+function cerrarPopovers(){
+  document.querySelectorAll('.popover').forEach(p=>p.classList.remove('show'));
+}
+
+function enviarReaccion(em){
+  cerrarPopovers();
+  if(!estado.viendoId) return;
+  mostrarAnimacionEmojiFlotante(em);
+  if(bus) bus.postMessage({ type:'reaction', streamId:estado.viendoId, emoji:em });
+}
+
+function mostrarAnimacionEmojiFlotante(em){
+  const wrap = $('floating-reactions');
+  if(!wrap) return;
+  const el = document.createElement('div');
+  el.className = 'float-emoji';
+  el.textContent = em;
+  el.style.left = (Math.random()*70 + 10) + '%';
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(), 2400);
+
+  const wrapBc = $('floating-reactions-bc');
+  if(wrapBc && estado.transmitiendo){
+    const el2 = document.createElement('div');
+    el2.className = 'float-emoji';
+    el2.textContent = em;
+    el2.style.left = (Math.random()*70 + 10) + '%';
+    wrapBc.appendChild(el2);
+    setTimeout(()=>el2.remove(), 2400);
+  }
+}
+
+function enviarSticker(url){
+  cerrarPopovers();
+  if(!estado.viendoId) return;
+  const cuenta = obtenerCuenta(estado.usuario);
+  const msg = { tipo:'sticker', username:estado.usuario, usuario:cuenta.displayName, url, ts:Date.now() };
+  agregarMensajeAlHistorial(estado.viendoId, msg);
+  appendMensajeChat(msg);
+  if(bus) bus.postMessage({ type:'chat_msg', streamId:estado.viendoId, msg });
+}
+
+function crearStickerPersonalizado(){
+  const url = $('input-sticker-url').value.trim();
+  if(!url){ toast('Introduce una URL válida', 'err'); return; }
+  const custom = cargarStickers();
+  custom.push({ url });
+  guardarStickers(custom);
+  $('input-sticker-url').value = '';
+  poblarStickers();
+  toast('Sticker añadido', 'ok');
+}
+
+function enviarRegalo(giftId){
+  cerrarPopovers();
+  if(!estado.viendoId) return;
+  const g = REGALOS_WP.find(x=>x.id===giftId);
+  if(!g) return;
+  const cuenta = obtenerCuenta(estado.usuario);
+  const msg = { tipo:'gift', username:estado.usuario, usuario:cuenta.displayName, nombreRegalo:g.label, ts:Date.now() };
+  agregarMensajeAlHistorial(estado.viendoId, msg);
+  appendMensajeChat(msg);
+  mostrarAnimacionRegalo(g);
+  if(bus) bus.postMessage({ type:'gift', streamId:estado.viendoId, giftId, usuario:cuenta.displayName });
+}
+
+function mostrarAnimacionRegalo(g){
+  const box = $('player-box');
+  if(!box) return;
+  const burst = document.createElement('div');
+  burst.className = 'gift-burst';
+  burst.innerHTML = `<div class="gift-burst-inner"><i class="fa-brands fa-whatsapp" style="color:${g.color}"></i><span style="color:#fff;">¡Regalo ${g.label} recibido!</span></div>`;
+  box.appendChild(burst);
+  setTimeout(()=>burst.remove(), 2200);
+}
+
+/* =========================================================================
+   PERFIL Y CUENTAS (Modificado para quitar opciones de editar/eliminar ajenas)
+   ========================================================================= */
+function cargarFormularioPerfil(){
+  const c = obtenerCuenta(estado.usuario);
+  if(!c) return;
+  pintarAvatar($('profile-avatar-big'), c, c.displayName);
+  $('profile-name-big').textContent = c.displayName;
+  $('profile-user-big').textContent = '@'+c.username;
+  $('edit-display').value = c.displayName;
+  $('edit-user-locked').value = c.username;
+  $('edit-bio').value = c.bio || '';
+  $('edit-pass').value = '';
+}
+
+function subirAvatar(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    const dataUrl = evt.target.result;
+    actualizarCuenta(estado.usuario, { avatar: dataUrl });
+    actualizarBadgeUsuario();
+    cargarFormularioPerfil();
+    toast('Foto de perfil actualizada', 'ok');
+  };
+  reader.readAsDataURL(file);
+}
+
+function guardarPerfil(){
+  const displayName = $('edit-display').value.trim();
+  const bio = $('edit-bio').value.trim();
+  const pass = $('edit-pass').value;
+  if(!displayName){ toast('El nombre no puede estar vacío', 'err'); return; }
+  const cambios = { displayName, bio };
+  if(pass){
+    if(pass.length < 4){ toast('La contraseña debe tener al menos 4 caracteres', 'err'); return; }
+    cambios.passHash = obscurecer(pass);
+  }
+  actualizarCuenta(estado.usuario, cambios);
+  actualizarBadgeUsuario();
+  toast('Perfil guardado con éxito', 'ok');
+}
+
+function renderizarListaCuentas(){
+  const cuentas = Object.values(cargarCuentas());
+  const cont = $('accounts-list');
+  if(cuentas.length === 0){ cont.innerHTML = '<p style="color:var(--low)">No hay cuentas guardadas.</p>'; return; }
+  
+  cont.innerHTML = cuentas.map(c=>{
+    const esActual = c.username === estado.usuario;
+    const av = avatarStyle(c.avatar, c.displayName);
+    return `<div class="acc-row">
+      <div class="avatar av-40" style="${av.css}">${av.letra}</div>
+      <div class="meta">
+        <b>${escapeHtml(c.displayName)}</b>
+        <small>@${escapeHtml(c.username)}</small>
+      </div>
+      ${esActual ? '<span class="badge-current">Sesión activa</span>' : ''}
+      <div class="actions">
+        ${esActual ? '' : `<button class="icon-btn" title="Cambiar a esta cuenta" onclick="pedirPassUsarCuenta('${c.username}')"><i class="fa-solid fa-right-to-bracket"></i></button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function pedirPassUsarCuenta(username){
+  $('uc-username').textContent = '@'+username;
+  $('uc-user-hidden').value = username;
+  $('uc-pass').value = '';
+  $('modal-usar-cuenta').classList.add('show');
+}
+function confirmarUsarCuenta(){
+  const u = $('uc-user-hidden').value;
+  const p = $('uc-pass').value;
+  const r = validarLogin(u,p);
+  if(!r.ok){ toast(r.msg, 'err'); return; }
+  cerrarModal('modal-usar-cuenta');
+  iniciarSesionComo(u);
+  toast('Cambiado a @'+u, 'ok');
+}
+
+function pedirEliminarCuenta(username){
+  $('confirmar-titulo').textContent = '¿Eliminar cuenta @'+username+'?';
+  $('confirmar-texto').textContent = 'Se borrará tu cuenta de este navegador permanentemente.';
+  $('confirmar-btn-ok').onclick = function(){
+    eliminarCuenta(username);
+    cerrarModal('modal-confirmar');
+    toast('Cuenta eliminada', 'ok');
+    cerrarSesion();
+  };
+  $('modal-confirmar').classList.add('show');
+}
+
+function renderizarSelectorHistorial(){
+  const idx = indiceStreams();
+  const select = $('hist-select');
+  if(idx.length === 0){
+    select.innerHTML = '<option value="">No hay directos registrados</option>';
+    $('hist-log').innerHTML = '<p style="color:var(--low)">No hay historial disponible todavía.</p>';
+    return;
+  }
+  select.innerHTML = idx.map(id=>`<option value="${id}">Directo #${id.slice(-6)}</option>`).join('');
+  renderHistorial();
+}
+
+function renderHistorial(){
+  const id = $('hist-select').value;
+  const log = $('hist-log');
+  if(!id){ log.innerHTML = ''; return; }
+  const msgs = cargarChat(id);
+  if(msgs.length === 0){
+    log.innerHTML = '<p style="color:var(--low); font-size:12.5px;">No hay mensajes registrados en este directo.</p>';
+    return;
+  }
+  log.innerHTML = msgs.map(m=>{
+    const ts = fmtFechaHora(m.ts);
+    if(m.tipo === 'sistema') return `<div class="hist-line"><i>${escapeHtml(m.texto)}</i><span class="t">${ts}</span></div>`;
+    if(m.tipo === 'gift') return `<div class="hist-line"><b>${escapeHtml(m.usuario)}</b> envió regalo: ${escapeHtml(m.nombreRegalo)}<span class="t">${ts}</span></div>`;
+    if(m.tipo === 'sticker') return `<div class="hist-line"><b>${escapeHtml(m.usuario)}</b> envió un sticker<span class="t">${ts}</span></div>`;
+    return `<div class="hist-line"><b>${escapeHtml(m.usuario)}:</b> ${escapeHtml(m.texto)}<span class="t">${ts}</span></div>`;
+  }).join('');
+}
+
+function abrirPerfilPublico(username){
+  const c = obtenerCuenta(username);
+  if(!c) return;
+  pintarAvatar($('pp-avatar'), c, c.displayName);
+  $('pp-name').textContent = c.displayName;
+  $('pp-user').textContent = '@'+c.username;
+  $('pp-bio').textContent = c.bio || 'Este usuario no ha escrito una biografía todavía.';
+  
+  const liveWrap = $('pp-live-wrap');
+  const streamActivo = Object.values(estado.streams).find(s=>s.username === username);
+  if(streamActivo){
+    liveWrap.innerHTML = `<div class="pp-live-tag" style="cursor:pointer;" onclick="cerrarModal('modal-perfil-publico');entrarADirecto('${streamActivo.id}')"><span class="tag-live"><span class="b"></span></span> ¡Transmitiendo en directo ahora! (Ver)</div>`;
+  } else {
+    liveWrap.innerHTML = '';
+  }
+
+  $('modal-perfil-publico').classList.add('show');
+}
+
+function cerrarModal(id){ $(id).classList.remove('show'); }
+
+/* =========================================================================
+   SINCRONIZACIÓN MULTI-PESTAÑA (BroadcastChannel)
+   ========================================================================= */
+if(bus){
+  bus.onmessage = (event) => {
+    const data = event.data;
+    if(!data) return;
+
+    if(data.type === 'request_state'){
+      if(estado.transmitiendo && estado.miStreamId){
+        const s = estado.streams[estado.miStreamId];
+        if(s) bus.postMessage({ type:'stream_start', stream: serializarStream(s) });
+      }
+    } else if(data.type === 'stream_start'){
+      estado.streams[data.stream.id] = Object.assign(data.stream, { viewers: new Set(), lastFrame:null, lastHeartbeat:Date.now() });
+      renderizarSidebar(); renderizarFeed();
+    } else if(data.type === 'stream_end'){
+      delete estado.streams[data.streamId];
+      if(estado.viendoId === data.streamId){
+        toast('El directo ha finalizado.', 'err');
+        salirDeWatch(true);
+        irVista('feed');
+      }
+      renderizarSidebar(); renderizarFeed();
+    } else if(data.type === 'frame_update'){
+      const s = estado.streams[data.streamId];
+      if(s){
+        s.lastFrame = data.dataUrl;
+        s.lastHeartbeat = Date.now();
+        if(estado.viendoId === data.streamId) mostrarFrame(data.dataUrl);
+      }
+    } else if(data.type === 'chat_msg'){
+      agregarMensajeAlHistorial(data.streamId, data.msg);
+      if(estado.viendoId === data.streamId) appendMensajeChat(data.msg);
+    } else if(data.type === 'reaction'){
+      if(estado.viendoId === data.streamId) mostrarAnimacionEmojiFlotante(data.emoji);
+    } else if(data.type === 'gift'){
+      const g = REGALOS_WP.find(x=>x.id===data.giftId);
+      if(g && estado.viendoId === data.streamId) mostrarAnimacionRegalo(g);
+    } else if(data.type === 'viewer_join'){
+      const s = estado.streams[data.streamId];
+      if(s){ s.viewers = s.viewers || new Set(); s.viewers.add(data.username); actualizarContadorViewers(); renderizarFeed(); }
+    } else if(data.type === 'viewer_leave'){
+      const s = estado.streams[data.streamId];
+      if(s && s.viewers){ s.viewers.delete(data.username); actualizarContadorViewers(); renderizarFeed(); }
+    }
+  };
+}
+</script>
+</body>
+</html>
