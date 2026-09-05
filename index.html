@@ -273,6 +273,185 @@
                 max-width: 60%;
             }
         }
+
+        /* =====================================================
+           INICIO — AJUSTES SOLO PARA MÓVIL (no afecta a PC)
+           Todo lo de aquí abajo va dentro de @media (max-width: 900px)
+           así que en pantallas grandes se ignora por completo.
+        ===================================================== */
+        @media (max-width: 900px) {
+
+            /* --- Botón hamburguesa (solo visible en móvil) --- */
+            .btn-menu-movil {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                background: rgba(255,255,255,0.08);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px;
+                color: #fff;
+                font-size: 18px;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            /* --- Topbar: todo en una fila que se acomoda, sin desbordar --- */
+            .topbar {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                gap: 8px !important;
+                padding: 10px 12px !important;
+                overflow: hidden;
+            }
+            .topbar .brand-sub { display: none !important; }
+            .topbar .brand-name { font-size: 15px !important; }
+
+            .topbar .search-box {
+                order: 3;
+                width: 100% !important;
+                flex: 1 1 100% !important;
+                margin-top: 8px;
+            }
+
+            .topbar .top-actions {
+                order: 4;
+                width: 100%;
+                flex: 1 1 100%;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                gap: 8px !important;
+                margin-top: 8px;
+                padding-bottom: 4px;
+            }
+            .topbar .top-actions::-webkit-scrollbar { height: 3px; }
+            .topbar .top-actions .top-button {
+                flex: 0 0 auto !important;
+                white-space: nowrap;
+                padding: 8px 10px !important;
+                font-size: 12px !important;
+            }
+            /* En pantallas muy chicas, ocultamos el texto y dejamos solo el icono */
+            @media (max-width: 420px) {
+                .topbar .top-actions .top-button span { display: none; }
+            }
+
+            /* --- Layout general: la barra lateral se convierte en menú deslizable --- */
+            .app {
+                display: block !important;
+                grid-template-columns: none !important;
+            }
+
+            .sidebar {
+                position: fixed !important;
+                top: 0;
+                left: 0;
+                height: 100vh !important;
+                width: 78vw !important;
+                max-width: 300px;
+                z-index: 3000;
+                overflow-y: auto;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 6px 0 24px rgba(0,0,0,0.5);
+            }
+            .sidebar.sidebar-abierto {
+                transform: translateX(0);
+            }
+
+            /* Fondo oscuro detrás del menú cuando está abierto */
+            .overlay-menu-movil {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.55);
+                z-index: 2500;
+            }
+            .overlay-menu-movil.activo {
+                display: block;
+            }
+
+            .main {
+                width: 100% !important;
+                padding: 12px !important;
+            }
+
+            /* --- Hero: apilado en vertical --- */
+            .hero {
+                flex-direction: column !important;
+                text-align: center;
+                padding: 20px 14px !important;
+                gap: 14px;
+            }
+            .hero-decoration {
+                width: 90px !important;
+                height: 90px !important;
+                margin: 0 auto;
+            }
+            .hero-buttons {
+                justify-content: center !important;
+                flex-wrap: wrap;
+            }
+
+            /* --- Categorías: scroll horizontal, sin amontonarse --- */
+            .categories {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                gap: 8px !important;
+                padding-bottom: 6px;
+            }
+            .categories .category {
+                flex: 0 0 auto !important;
+                white-space: nowrap;
+                font-size: 12px !important;
+                padding: 8px 12px !important;
+            }
+
+            /* --- Grid de videos: 2 columnas ordenadas en vez de amontonado --- */
+            .video-grid,
+            #panelVideosContainer {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+            }
+            .video-card .video-title {
+                font-size: 13px !important;
+            }
+
+            /* --- Modal del reproductor: pantalla completa en móvil --- */
+            .modal .player-window {
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* --- Barra flotante de reproducción: más compacta --- */
+            .ymusic-floating-bar {
+                height: 58px !important;
+                padding: 0 8px !important;
+            }
+            .ymusic-center-info {
+                max-width: 45% !important;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .video-grid,
+            #panelVideosContainer {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        /* =====================================================
+           FIN — AJUSTES SOLO PARA MÓVIL
+        ===================================================== */
     </style>
 </head>
 
@@ -282,6 +461,9 @@
     <div class="ambient ambient-two"></div>
 
     <header class="topbar">
+        <!-- INICIO: BOTÓN MENÚ MÓVIL (solo aparece en pantallas pequeñas) -->
+        <button class="btn-menu-movil" id="btnMenuMovil" style="display:none;" title="Abrir menú" onclick="abrirMenuMovil()">☰</button>
+        <!-- FIN: BOTÓN MENÚ MÓVIL -->
         <div class="brand">
             <div class="brand-symbol">W</div>
             <div>
@@ -345,8 +527,12 @@
         </div>
     </header>
 
+    <!-- INICIO: FONDO OSCURO PARA CERRAR EL MENÚ MÓVIL AL TOCAR AFUERA -->
+    <div class="overlay-menu-movil" id="overlayMenuMovil" onclick="cerrarMenuMovil()"></div>
+    <!-- FIN: FONDO OSCURO MENÚ MÓVIL -->
+
     <div class="app">
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebarPrincipal">
             <div class="sidebar-section">
                 <div class="section-label">EXPLORAR</div>
                 <button class="side-link active" onclick="window.location.href='index.html'">
@@ -1214,6 +1400,48 @@
             image: ""
         };
 
+        /* ============================================================
+           INICIO: MENÚ MÓVIL (abrir / cerrar barra lateral deslizable)
+           Esto solo tiene efecto visual en pantallas de celular/tablet,
+           en PC el botón permanece oculto y no cambia nada.
+        ============================================================ */
+        function mostrarUOcultarBotonMenu() {
+            const btnMenu = document.getElementById('btnMenuMovil');
+            if (!btnMenu) return;
+            if (window.innerWidth <= 900) {
+                btnMenu.style.display = 'flex';
+            } else {
+                btnMenu.style.display = 'none';
+                cerrarMenuMovil();
+            }
+        }
+
+        function abrirMenuMovil() {
+            const sidebar = document.getElementById('sidebarPrincipal');
+            const overlay = document.getElementById('overlayMenuMovil');
+            if (sidebar) sidebar.classList.add('sidebar-abierto');
+            if (overlay) overlay.classList.add('activo');
+        }
+
+        function cerrarMenuMovil() {
+            const sidebar = document.getElementById('sidebarPrincipal');
+            const overlay = document.getElementById('overlayMenuMovil');
+            if (sidebar) sidebar.classList.remove('sidebar-abierto');
+            if (overlay) overlay.classList.remove('activo');
+        }
+
+        window.addEventListener('resize', mostrarUOcultarBotonMenu);
+
+        // Al tocar cualquier botón del menú lateral en móvil, se cierra el menú automáticamente
+        document.addEventListener('DOMContentLoaded', function() {
+            mostrarUOcultarBotonMenu();
+            const sidebarBtns = document.querySelectorAll('#sidebarPrincipal .side-link');
+            sidebarBtns.forEach(btn => btn.addEventListener('click', cerrarMenuMovil));
+        });
+        /* ============================================================
+           FIN: MENÚ MÓVIL
+        ============================================================ */
+
         document.addEventListener("DOMContentLoaded", function() {
             // Lógica para abrir el modal de compartir desde el reproductor
             const btnCompartirModal = document.getElementById('btnCompartirModal');
@@ -1326,6 +1554,14 @@
             });
 
             actualizarPanelVideos();
+
+            // INICIO: recuperar en la cuadrícula principal los videos que el usuario subió antes (persistencia)
+            cargarVideosSubidosGuardados();
+            // FIN: recuperar videos subidos
+
+            // INICIO: si había un video reproduciéndose antes de recargar, mostrarlo de nuevo en la barra
+            restaurarUltimoVideoAlRecargar();
+            // FIN: restaurar último video
 
             const btnAbrirSubida = document.getElementById('btnAbrirSubida');
             const modalSubida = document.getElementById('modalSubida');
@@ -1540,6 +1776,104 @@
                 panelContainer.appendChild(itemCard);
             });
         }
+
+        /* ============================================================
+           INICIO: GUARDAR Y MOSTRAR DE NUEVO LOS VIDEOS SUBIDOS
+           Antes, al recargar la página, los videos subidos por el
+           usuario desaparecían de la cuadrícula principal (solo
+           quedaban en el panel de abajo). Esta función los vuelve a
+           dibujar en #videoGrid usando los datos guardados en
+           localStorage, para que no se pierdan al recargar.
+        ============================================================ */
+        function cargarVideosSubidosGuardados() {
+            const videoGrid = document.getElementById('videoGrid');
+            if (!videoGrid) return;
+
+            let misVideosPanel = JSON.parse(localStorage.getItem('wibsitihub_panel_videos')) || [];
+            if (misVideosPanel.length === 0) return;
+
+            // Insertamos del más antiguo al más nuevo para que el más reciente quede arriba
+            for (let i = misVideosPanel.length - 1; i >= 0; i--) {
+                const v = misVideosPanel[i];
+
+                // Evitar duplicar si por algún motivo ya existe una tarjeta con ese id
+                if (videoGrid.querySelector(`[data-id="${v.id}"]`)) continue;
+
+                const tituloSeguro = (v.title || 'Video').replace(/'/g, "\\'");
+                const nuevaCard = document.createElement('article');
+                nuevaCard.className = 'video-card';
+                nuevaCard.setAttribute('data-category', v.categoria || 'Videos');
+                nuevaCard.setAttribute('data-title', v.title || 'Video');
+                nuevaCard.setAttribute('data-video', v.video || '');
+                nuevaCard.setAttribute('data-image', v.image || 'img/portada1.jpg');
+                nuevaCard.setAttribute('data-id', v.id);
+                nuevaCard.setAttribute('onclick', `openVideo('${tituloSeguro}', '${v.video}', '${v.image}')`);
+
+                let favoritosActuales = JSON.parse(localStorage.getItem('wibsi_favoritos')) || [];
+                const esFav = favoritosActuales.includes(v.id);
+
+                nuevaCard.innerHTML = `
+                    <div class="thumbnail" style="position: relative;">
+                        <img src="${v.image || 'img/portada1.jpg'}" alt="Miniatura">
+                        <div class="thumbnail-gradient"></div>
+                        <div class="quality">HD</div>
+                        <div class="duration">03:30</div>
+                        <button class="play-button">▶</button>
+                        <div class="card-quick-actions" style="opacity: 1;">
+                            <button class="action-chip fav-btn ${esFav ? 'favorito-activo' : ''}" onclick="toggleFavoritoIndex(event, '${v.id}', this)" title="Marcar como favorito">❤</button>
+                            <button class="action-chip privado-btn" onclick="enviarAVideoPrivado(event, '${tituloSeguro}', '${v.video}', '${v.image}')" title="Guardar como privado">🔒</button>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${v.title}</div>
+                        <div class="creator">
+                            <div class="creator-avatar">AM</div>
+                            <span>Anthony Merlos</span>
+                            <i>✓</i>
+                        </div>
+                        <div class="video-meta">
+                            <span>Subido por ti</span>
+                            <b>•</b>
+                            <span>guardado</span>
+                        </div>
+                    </div>
+                `;
+
+                videoGrid.insertBefore(nuevaCard, videoGrid.firstChild);
+            }
+        }
+        /* ============================================================
+           FIN: GUARDAR Y MOSTRAR DE NUEVO LOS VIDEOS SUBIDOS
+        ============================================================ */
+
+        /* ============================================================
+           INICIO: RECORDAR EL ÚLTIMO VIDEO VISTO AL RECARGAR LA PÁGINA
+           Guarda qué video estaba activo y, al volver a cargar la
+           página, muestra de nuevo la barra flotante con ese video
+           listo para reproducirse (no se autorreproduce por las
+           restricciones de los navegadores, pero queda visible).
+        ============================================================ */
+        function restaurarUltimoVideoAlRecargar() {
+            const datosGuardados = localStorage.getItem('wibsi_ultimo_video');
+            if (!datosGuardados) return;
+
+            try {
+                const v = JSON.parse(datosGuardados);
+                if (!v || !v.video) return;
+
+                videoActualReproduciendo = v;
+
+                const videoPlayer = document.getElementById('videoPlayer');
+                if (videoPlayer) videoPlayer.src = v.video;
+
+                mostrarBarraFlotante(v.title, v.image);
+            } catch (e) {
+                console.log('No se pudo restaurar el último video:', e);
+            }
+        }
+        /* ============================================================
+           FIN: RECORDAR EL ÚLTIMO VIDEO VISTO
+        ============================================================ */
 
         function checkPassword() {
             const passwordCorrecta = "2436anthony123privado123"; 
@@ -1779,6 +2113,10 @@
                 video: videoSrc,
                 image: imageSrc
             };
+
+            // INICIO: recordar este video para poder mostrarlo de nuevo si se recarga la página
+            localStorage.setItem('wibsi_ultimo_video', JSON.stringify(videoActualReproduciendo));
+            // FIN: recordar video
 
             let historialVideos = JSON.parse(localStorage.getItem('wibsitihub_historial_videos')) || [];
             
