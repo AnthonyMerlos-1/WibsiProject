@@ -127,6 +127,14 @@
     .short-card video, .short-card iframe{
         width:100%; height:100%; object-fit:cover; border:none;
     }
+    .short-card.is-audio .short-media-wrap{
+        background-size:cover; background-position:center;
+        filter:brightness(.55);
+    }
+    .audio-visual{
+        position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+        font-size:80px; z-index:1; opacity:.85; pointer-events:none;
+    }
     .fx-none{filter:none;}
     .fx-bn{filter:grayscale(1) contrast(1.1);}
     .fx-vintage{filter:sepia(.45) saturate(1.3) contrast(1.05);}
@@ -160,8 +168,20 @@
         cursor:pointer; font-size:15px;
     }
 
+    /* ---------- BARRA DE PROGRESO (estilo YouTube) ---------- */
+    .progress-wrap{
+        position:absolute; left:0; right:0; bottom:0; height:5px; z-index:8;
+        background:rgba(255,255,255,0.22); cursor:pointer;
+    }
+    .progress-wrap:hover{ height:8px; }
+    .progress-fill{
+        height:100%; width:0%; background:linear-gradient(90deg,#6366f1,#a855f7);
+        transition:width .12s linear;
+    }
+    .progress-wrap.no-seek{ cursor:default; }
+
     .short-info{
-        position:absolute; left:16px; right:86px; bottom:20px; z-index:4;
+        position:absolute; left:16px; right:86px; bottom:22px; z-index:4;
     }
     .short-user{ display:flex; align-items:center; gap:8px; margin-bottom:8px;}
     .short-avatar{
@@ -176,7 +196,7 @@
     .short-tag{ font-size:11px; color:#c7d2fe; margin-top:6px; }
 
     .short-actions{
-        position:absolute; right:10px; bottom:26px; z-index:5;
+        position:absolute; right:10px; bottom:30px; z-index:5;
         display:flex; flex-direction:column; align-items:center; gap:18px;
     }
     .action-btn{
@@ -209,6 +229,10 @@
         height:100%; text-align:center; gap:14px; color:var(--muted); padding:30px;
     }
     .empty-feed .big{ font-size:44px; }
+    .empty-feed .btnvolver{
+        background:var(--accent-grad); border:none; color:#fff; padding:10px 18px;
+        border-radius:10px; font-weight:700; cursor:pointer;
+    }
 
     /* ---------- BOTON FLOTANTE + ---------- */
     .fab-create{
@@ -305,7 +329,7 @@
         background:#000; border-radius:12px; overflow:hidden; position:relative;
         display:none; border:1px solid var(--border);
     }
-    .video-preview-box video{ width:100%; max-height:280px; display:block; }
+    .video-preview-box video, .video-preview-box audio{ width:100%; max-height:280px; display:block; }
 
     .trim-wrap{ display:none; flex-direction:column; gap:8px; }
     .trim-labels{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); }
@@ -427,23 +451,18 @@
 <div class="app">
     <aside class="sidebar">
         <div class="section-label">NAVEGACIÓN</div>
-        <button class="side-link" onclick="window.location.href='index.html'"><span>⌂</span> Inicio</button>
+        <button class="side-link active" id="sideInicio"><span>⌂</span> Inicio</button>
         <button class="side-link" onclick="window.location.href='tendencias.html'"><span>🎁</span> Tendencias</button>
         <button class="side-link active"><span>🎬</span> Wshorts</button>
 
         <div class="section-label">TU ESPACIO</div>
 
+        <button class="side-link" id="sideFavoritos">
+            <span>💌</span> Favoritos</button>
 
-        <button class="side-link" id="sideFavoritos" onclick="window.location.href='favoshorts.html'">
-            <span>💌</span>
-             Favoritos</button> 
-
-
-
-        <button class="side-link" onclick="scrollFeedTop()" onclick="window.location.href='recienshorts.html'">
-        <span>⏰</span> Recientes
-    </button>
-
+        <button class="side-link" id="sideRecientes">
+            <span>⏰</span> Recientes
+        </button>
 
         <div class="section-label">CREAR</div>
         <button class="side-link" onclick="abrirModalCrear()"><span>➕️</span> Nuevo Short</button>
@@ -476,19 +495,20 @@
             </div>
 
             <div class="field">
-                <label>Video (sube un .mp4 o pega un enlace de YouTube / cualquier página)</label>
+                <label>Video o audio (sube un archivo o pega un enlace de YouTube / video / cualquier página)</label>
                 <label class="filepick">
                     <span class="ico">📁</span>
                     <div>
-                        <div id="videoFileName">Seleccionar archivo .mp4 desde el explorador</div>
-                        <small>Formatos compatibles: MP4</small>
+                        <div id="videoFileName">Seleccionar archivo desde el explorador</div>
+                        <small>Video: MP4, WEBM, MOV, MKV · Audio: MP3, WAV, OGG, M4A</small>
                     </div>
-                    <input type="file" id="fVideoFile" accept="video/mp4,video/*">
+                    <input type="file" id="fVideoFile" accept="video/*,audio/*,.mp4,.webm,.mov,.mkv,.mp3,.wav,.ogg,.m4a">
                 </label>
-                <input type="text" id="fVideoUrl" style="margin-top:10px;" placeholder="https://www.youtube.com/watch?v=... o enlace .mp4" autocomplete="off">
+                <input type="text" id="fVideoUrl" style="margin-top:10px;" placeholder="https://www.youtube.com/watch?v=... o enlace .mp4/.mp3 o cualquier página" autocomplete="off">
                 <div class="hint">Puedes subir un archivo O pegar un enlace (no ambos a la vez).</div>
                 <div class="video-preview-box" id="videoPreviewBox">
-                    <video id="videoPreviewEl" muted playsinline></video>
+                    <video id="videoPreviewEl" muted playsinline style="display:none;"></video>
+                    <audio id="audioPreviewEl" controls style="display:none; width:100%;"></audio>
                 </div>
                 <div class="trim-wrap" id="trimWrap">
                     <div class="trim-labels"><span>✂️ Recortar Short</span><span id="trimTimes">0:00 - 0:00</span></div>
@@ -498,13 +518,6 @@
                     </div>
                 </div>
             </div>
-
-
-
-
-
-
-            
 
             <div class="field">
                 <label>Miniatura (solo explorador de archivos)</label>
@@ -602,6 +615,11 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                     </span>Copiar enlace
                 </div>
+                <div class="share-opt" onclick="compartirEn('descargar')">
+                    <span class="ico">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </span>Descargar
+                </div>
                 <div class="share-opt" onclick="compartirEn('whatsapp')">
                     <span class="ico" style="color: #25D366;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
@@ -621,11 +639,6 @@
                     <span class="ico" style="color: #229ED9;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.228-.46-1.901-.903-1.056-.693-1.653-1.124-2.678-1.8-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.119.098.152.228.163.33.016.116.033.378.019.582z"/></svg>
                     </span>Telegram
-                </div>
-                <div class="share-opt" onclick="compartirEn('youtube')">
-                    <span class="ico" style="color: #FF0000;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                    </span>YouTube
                 </div>
                 <div class="share-opt" onclick="compartirEn('correo')">
                     <span class="ico">
@@ -650,15 +663,71 @@
 <script>
 /* =========================================================
    WSHORTS — Lógica completa con mensajes y sin recargas
+   Videos/audios reales se guardan en IndexedDB (no en
+   localStorage) para evitar el error de "cuota excedida"
+   que hacía que los shorts subidos desaparecieran.
    ========================================================= */
-const STORAGE_KEY = 'wibsitihub_wshorts_data';
+const STORAGE_KEY   = 'wibsitihub_wshorts_data';
+const SONIDO_KEY    = 'wibsitihub_wshorts_sonido';
+const DB_NAME       = 'wibsitihub_wshorts_db';
+const DB_VERSION    = 1;
+const STORE_MEDIA   = 'mediaBlobs';
+
 let shorts = [];
-let shortActivoId = null;      
-let archivoVideoBase64 = null;
-let archivoVideoNombre = '';
-let archivoThumbBase64 = null;
+let vistaActual = 'todos';     // 'todos' | 'favoritos' | 'recientes'
+let shortActivoId = null;
+let archivoMediaBlob = null;   // Blob del archivo elegido (video o audio)
+let archivoMediaTipo = null;   // 'video' | 'audio'
+let archivoMediaNombre = '';
+let archivoMediaObjectUrl = null;
+let archivoThumbBase64 = null; // las miniaturas sí caben en localStorage
 let subidaCancelada = false;
-let currentPlayingEl = null;
+let sonidoGlobalActivo = false; // false = todo silenciado por defecto (autoplay)
+const mediaObjectUrls = {};     // id -> object URL creada desde IndexedDB, para poder revocarla
+
+/* ---------- IndexedDB: guardado real de video/audio ---------- */
+function abrirDB(){
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if(!db.objectStoreNames.contains(STORE_MEDIA)){
+                db.createObjectStore(STORE_MEDIA);
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+async function guardarMediaBlob(id, blob){
+    const db = await abrirDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_MEDIA, 'readwrite');
+        tx.objectStore(STORE_MEDIA).put(blob, id);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+    });
+}
+async function obtenerMediaBlob(id){
+    const db = await abrirDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_MEDIA, 'readonly');
+        const req = tx.objectStore(STORE_MEDIA).get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+    });
+}
+async function borrarMediaBlob(id){
+    try{
+        const db = await abrirDB();
+        return new Promise((resolve) => {
+            const tx = db.transaction(STORE_MEDIA, 'readwrite');
+            tx.objectStore(STORE_MEDIA).delete(id);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+        });
+    }catch(e){ return false; }
+}
 
 /* ---------- Utilidades ---------- */
 function mostrarToast(msg){
@@ -669,7 +738,7 @@ function mostrarToast(msg){
     toast._t = setTimeout(()=> toast.style.display='none', 2600);
 }
 function formatTime(s){
-    if(isNaN(s)) return "0:00";
+    if(isNaN(s) || !isFinite(s)) return "0:00";
     const m = Math.floor(s/60), sec = Math.floor(s%60);
     return `${m}:${sec<10?'0':''}${sec}`;
 }
@@ -679,8 +748,29 @@ function getYoutubeId(url){
     const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
     return m ? m[1] : null;
 }
+function esEnlaceDeVideoDirecto(url){
+    return /\.(mp4|webm|ogv|mov|m4v)(\?.*)?$/i.test(url);
+}
+function esEnlaceDeAudioDirecto(url){
+    return /\.(mp3|wav|ogg|m4a|aac|flac)(\?.*)?$/i.test(url);
+}
 
-/* ---------- Almacenamiento ---------- */
+/* ---------- Preferencia global de sonido ---------- */
+function cargarPreferenciaSonido(){
+    try{
+        sonidoGlobalActivo = localStorage.getItem(SONIDO_KEY) === '1';
+    }catch(e){ sonidoGlobalActivo = false; }
+    actualizarBotonSonidoGlobal();
+}
+function guardarPreferenciaSonido(){
+    try{ localStorage.setItem(SONIDO_KEY, sonidoGlobalActivo ? '1' : '0'); }catch(e){}
+}
+function actualizarBotonSonidoGlobal(){
+    const btn = document.getElementById('btnMuteAll');
+    btn.textContent = sonidoGlobalActivo ? '🔊 Sonido' : '🔇 Sonido';
+}
+
+/* ---------- Almacenamiento (metadatos en localStorage) ---------- */
 function cargarShorts(){
     try{
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -696,10 +786,11 @@ function cargarShorts(){
 }
 function guardarShorts(){
     try{
+        // Nunca se guardan blobs pesados aquí: sólo metadatos + miniaturas pequeñas.
         localStorage.setItem(STORAGE_KEY, JSON.stringify(shorts));
         return true;
     }catch(e){
-        mostrarToast("⚠️ Almacenamiento lleno. Usa un enlace en vez de subir el archivo.");
+        mostrarToast("⚠️ No se pudieron guardar los datos del short (espacio lleno).");
         return false;
     }
 }
@@ -730,56 +821,95 @@ function shortsDemo(){
 }
 
 /* ---------- Render del feed ---------- */
+function listaSegunVista(){
+    if(vistaActual === 'favoritos') return shorts.filter(s => s.faved);
+    if(vistaActual === 'recientes') return [...shorts].sort((a,b)=> (b.fecha||0) - (a.fecha||0));
+    return shorts;
+}
+function actualizarSidebarActivo(){
+    document.getElementById('sideInicio').classList.toggle('active', vistaActual === 'todos');
+    document.getElementById('sideFavoritos').classList.toggle('active', vistaActual === 'favoritos');
+    document.getElementById('sideRecientes').classList.toggle('active', vistaActual === 'recientes');
+}
 function renderShorts(){
+    actualizarSidebarActivo();
     const feed = document.getElementById('feed');
     feed.innerHTML = '';
-    if(shorts.length === 0){
+    const lista = listaSegunVista();
+
+    if(lista.length === 0){
+        let msg = 'Aún no hay shorts.<br>Toca el botón + para crear el primero.';
+        if(vistaActual === 'favoritos') msg = 'Aún no tienes shorts favoritos ⭐<br>Toca ⭐ en un short para guardarlo aquí.';
         feed.innerHTML = `<div class="empty-feed"><div class="big">🎬</div>
-            <div>Aún no hay shorts.<br>Toca el botón + para crear el primero.</div></div>`;
+            <div>${msg}</div>
+            ${vistaActual !== 'todos' ? '<button class="btnvolver" onclick="irAInicio()">Ver todos los shorts</button>' : ''}
+            </div>`;
         return;
     }
-    shorts.forEach(s => feed.appendChild(crearCardShort(s)));
+    lista.forEach(s => feed.appendChild(crearCardShort(s)));
     setupObserver();
+}
+function irAInicio(){
+    vistaActual = 'todos';
+    renderShorts();
+    scrollFeedTop(false);
 }
 
 function crearCardShort(s){
     const card = document.createElement('div');
-    card.className = 'short-card';
+    card.className = 'short-card' + (s.tipo === 'audio' ? ' is-audio' : '');
     card.dataset.id = s.id;
 
     const mediaWrap = document.createElement('div');
     mediaWrap.className = 'short-media-wrap';
 
+    let progresoDisponible = true; // si se puede mostrar/actualizar la barra de progreso
+
     if(s.tipo === 'youtube' && s.ytId){
         const params = new URLSearchParams({
-            autoplay:0, mute:1, loop:1, playlist:s.ytId, controls:0,
-            modestbranding:1, playsinline:1, rel:0
+            autoplay:0, mute: sonidoGlobalActivo ? 0 : 1, loop:1, playlist:s.ytId, controls:0,
+            modestbranding:1, playsinline:1, rel:0, enablejsapi:1
         });
         if(s.trimStart) params.set('start', Math.floor(s.trimStart));
         if(s.trimEnd) params.set('end', Math.floor(s.trimEnd));
         const iframe = document.createElement('iframe');
+        iframe.id = 'yt-' + s.id;
         iframe.src = `https://www.youtube.com/embed/${s.ytId}?${params.toString()}`;
         iframe.allow = "autoplay; encrypted-media; picture-in-picture";
         iframe.className = s.efecto || 'fx-none';
         mediaWrap.appendChild(iframe);
+        iframe.addEventListener('load', () => {
+            try{
+                iframe.contentWindow.postMessage(JSON.stringify({event:'listening', id: iframe.id}), '*');
+            }catch(e){}
+        });
+    } else if(s.tipo === 'iframe'){
+        const iframe = document.createElement('iframe');
+        iframe.src = s.src;
+        iframe.className = s.efecto || 'fx-none';
+        mediaWrap.appendChild(iframe);
+        progresoDisponible = false;
+    } else if(s.tipo === 'audio'){
+        if(s.thumb){ mediaWrap.style.backgroundImage = `url('${s.thumb}')`; }
+        const visual = document.createElement('div');
+        visual.className = 'audio-visual';
+        visual.textContent = '🎧';
+        mediaWrap.appendChild(visual);
+        const audio = document.createElement('audio');
+        audio.playsInline = true;
+        audio.muted = !sonidoGlobalActivo;
+        audio.preload = 'metadata';
+        mediaWrap.appendChild(audio);
+        configurarMediaReal(s, audio);
     } else {
         const video = document.createElement('video');
-        video.src = s.src;
         video.loop = false;
-        video.muted = true;
+        video.muted = !sonidoGlobalActivo;
         video.playsInline = true;
         video.className = s.efecto || 'fx-none';
         video.preload = 'metadata';
-        video.addEventListener('loadedmetadata', () => {
-            if(s.trimStart) video.currentTime = s.trimStart;
-        });
-        video.addEventListener('timeupdate', () => {
-            if(s.trimEnd && video.currentTime >= s.trimEnd){
-                video.currentTime = s.trimStart || 0;
-            }
-        });
-        video.addEventListener('ended', () => { video.currentTime = s.trimStart || 0; video.play().catch(()=>{}); });
         mediaWrap.appendChild(video);
+        configurarMediaReal(s, video);
     }
     card.appendChild(mediaWrap);
 
@@ -787,9 +917,13 @@ function crearCardShort(s){
         <div class="short-topfade"></div>
         <div class="short-botfade"></div>
         ${s.kids ? `<div class="kids-badge">👶 Para niños</div>` : ''}
-        <div class="mute-badge" onclick="toggleMuteCard(event,'${s.id}')">🔇</div>
+        <div class="mute-badge" id="mutebadge-${s.id}" onclick="toggleMuteCard(event,'${s.id}')">${sonidoGlobalActivo ? '🔊' : '🔇'}</div>
         <div class="play-hint" id="hint-${s.id}">▶</div>
         <div class="heart-burst" id="burst-${s.id}">💖</div>
+        ${progresoDisponible ? `
+        <div class="progress-wrap" id="progwrap-${s.id}" onclick="seekShort(event,'${s.id}')">
+            <div class="progress-fill" id="progress-${s.id}"></div>
+        </div>` : ''}
 
         <div class="short-info">
             <div class="short-user">
@@ -798,7 +932,7 @@ function crearCardShort(s){
             </div>
             <div class="short-title">${escapeHtml(s.titulo)}</div>
             <div class="short-desc">${escapeHtml(s.descripcion||'')}</div>
-            <div class="short-tag">✦ Wshorts</div>
+            <div class="short-tag">✦ Wshorts${s.tipo==='audio' ? ' · Audio' : ''}</div>
         </div>
 
         <div class="short-actions">
@@ -822,12 +956,98 @@ function crearCardShort(s){
     `;
 
     card.addEventListener('click', (e) => {
-        if(e.target.closest('.short-actions') || e.target.closest('.mute-badge')) return;
+        if(e.target.closest('.short-actions') || e.target.closest('.mute-badge') || e.target.closest('.progress-wrap')) return;
         togglePlayPause(card);
     });
 
     return card;
 }
+
+/* Asigna la fuente real (archivo local desde IndexedDB, URL directa, o archivo estático de demo)
+   a un <video> o <audio>, y conecta la barra de progreso + el loop con recorte. */
+async function configurarMediaReal(s, mediaEl){
+    let url = null;
+    if(s.storageId){
+        try{
+            const blob = await obtenerMediaBlob(s.storageId);
+            if(blob){
+                url = URL.createObjectURL(blob);
+                mediaObjectUrls[s.id] = url;
+            } else {
+                mostrarToast("⚠️ No se encontró el archivo guardado de \"" + s.titulo + "\"");
+            }
+        }catch(e){
+            mostrarToast("⚠️ Error al leer el archivo guardado");
+        }
+    } else {
+        url = s.src;
+    }
+    if(url){ mediaEl.src = url; }
+
+    mediaEl.addEventListener('loadedmetadata', () => {
+        if(s.trimStart) mediaEl.currentTime = s.trimStart;
+    });
+    mediaEl.addEventListener('timeupdate', () => {
+        if(s.trimEnd && mediaEl.currentTime >= s.trimEnd){
+            mediaEl.currentTime = s.trimStart || 0;
+        }
+        actualizarBarraProgreso(s.id, mediaEl.currentTime, mediaEl.duration, s.trimStart||0, s.trimEnd||0);
+    });
+    mediaEl.addEventListener('ended', () => {
+        mediaEl.currentTime = s.trimStart || 0;
+        mediaEl.play().catch(()=>{});
+    });
+}
+
+function actualizarBarraProgreso(id, current, duration, trimStart, trimEnd){
+    const fill = document.getElementById('progress-'+id);
+    if(!fill || !duration || !isFinite(duration)) return;
+    const inicio = trimStart || 0;
+    const fin = trimEnd || duration;
+    const total = Math.max(fin - inicio, 0.01);
+    const pct = Math.min(Math.max(((current - inicio) / total) * 100, 0), 100);
+    fill.style.width = pct + '%';
+}
+
+/* Click/tap en la barra de progreso para saltar a un punto del short */
+function seekShort(event, id){
+    event.stopPropagation();
+    const card = document.querySelector(`.short-card[data-id="${id}"]`);
+    if(!card) return;
+    const wrap = document.getElementById('progwrap-'+id);
+    const rect = wrap.getBoundingClientRect();
+    const fraccion = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+
+    const video = card.querySelector('video');
+    const audio = card.querySelector('audio');
+    const iframe = card.querySelector('iframe[id^="yt-"]');
+    const media = video || audio;
+
+    if(media && media.duration && isFinite(media.duration)){
+        media.currentTime = media.duration * fraccion;
+    } else if(iframe){
+        // Para YouTube usamos el comando seekTo vía postMessage
+        try{
+            iframe.contentWindow.postMessage(JSON.stringify({
+                event:'command', func:'seekTo', args:[9999 * fraccion, true]
+            }), '*');
+        }catch(e){}
+    }
+}
+
+/* Escucha global de mensajes de YouTube (infoDelivery) para actualizar su barra de progreso */
+window.addEventListener('message', (event) => {
+    let data;
+    try{ data = JSON.parse(event.data); }catch(e){ return; }
+    if(!data || data.event !== 'infoDelivery' || !data.info) return;
+    const id = data.id; // iframe id: yt-<shortId>
+    if(!id || !id.startsWith('yt-')) return;
+    const shortId = id.replace('yt-', '');
+    const { currentTime, duration } = data.info;
+    if(typeof currentTime === 'number' && typeof duration === 'number' && duration > 0){
+        actualizarBarraProgreso(shortId, currentTime, duration, 0, 0);
+    }
+});
 
 function escapeHtml(str){
     const d = document.createElement('div');
@@ -840,7 +1060,7 @@ function setupObserver(){
     const cards = document.querySelectorAll('.short-card');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            const media = entry.target.querySelector('video, iframe');
+            const media = entry.target.querySelector('video, audio, iframe');
             if(!media) return;
             if(entry.isIntersecting && entry.intersectionRatio > 0.7){
                 playMedia(media);
@@ -852,9 +1072,8 @@ function setupObserver(){
     cards.forEach(c => observer.observe(c));
 }
 function playMedia(media){
-    if(media.tagName === 'VIDEO'){
+    if(media.tagName === 'VIDEO' || media.tagName === 'AUDIO'){
         media.play().catch(()=>{});
-        currentPlayingEl = media;
     } else if(media.tagName === 'IFRAME'){
         try{
             media.contentWindow.postMessage(JSON.stringify({event:'command',func:'playVideo',args:[]}), '*');
@@ -862,7 +1081,7 @@ function playMedia(media){
     }
 }
 function pauseMedia(media){
-    if(media.tagName === 'VIDEO'){
+    if(media.tagName === 'VIDEO' || media.tagName === 'AUDIO'){
         media.pause();
     } else if(media.tagName === 'IFRAME'){
         try{
@@ -871,33 +1090,75 @@ function pauseMedia(media){
     }
 }
 function togglePlayPause(card){
-    const media = card.querySelector('video, iframe');
+    const media = card.querySelector('video, audio');
     const hint = card.querySelector('.play-hint');
-    if(!media) return;
-    if(media.tagName === 'VIDEO'){
-        if(media.paused){
-            media.play().catch(()=>{});
-            hint.textContent = '▶️'; hint.classList.add('show');
-        } else {
-            media.pause();
-            hint.textContent = '⏸️'; hint.classList.add('show');
+    if(!media){
+        // YouTube: alterna reproducción vía postMessage
+        const iframe = card.querySelector('iframe[id^="yt-"]');
+        if(iframe){
+            try{
+                iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'playVideo',args:[]}), '*');
+            }catch(e){}
         }
-        setTimeout(()=> hint.classList.remove('show'), 500);
+        return;
     }
+    if(media.paused){
+        media.play().catch(()=>{});
+        hint.textContent = '▶️'; hint.classList.add('show');
+    } else {
+        media.pause();
+        hint.textContent = '⏸️'; hint.classList.add('show');
+    }
+    setTimeout(()=> hint.classList.remove('show'), 500);
 }
+
+/* ---------- Sonido: silenciar / activar por short y globalmente ---------- */
 function toggleMuteCard(event, id){
     event.stopPropagation();
     const card = document.querySelector(`.short-card[data-id="${id}"]`);
-    const video = card.querySelector('video');
-    const badge = card.querySelector('.mute-badge');
-    if(video){
-        video.muted = !video.muted;
-        badge.textContent = video.muted ? '🔇' : '🔊';
-        mostrarToast(video.muted ? "Video silenciado 🔇" : "Sonido activado 🔊");
+    const media = card.querySelector('video, audio');
+    const badge = document.getElementById('mutebadge-'+id);
+    if(media){
+        media.muted = !media.muted;
+        badge.textContent = media.muted ? '🔇' : '🔊';
+        mostrarToast(media.muted ? "Video silenciado 🔇" : "Sonido activado 🔊");
     } else {
-        mostrarToast("Usa los controles del video de YouTube para el sonido.");
+        // YouTube
+        const iframe = card.querySelector('iframe[id^="yt-"]');
+        if(iframe){
+            const activo = badge.textContent.trim() === '🔇';
+            try{
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event:'command', func: activo ? 'unMute' : 'mute', args:[]
+                }), '*');
+            }catch(e){}
+            badge.textContent = activo ? '🔊' : '🔇';
+            mostrarToast(activo ? "Sonido activado 🔊" : "Video silenciado 🔇");
+        } else {
+            mostrarToast("Este contenido no tiene control de sonido propio.");
+        }
     }
 }
+document.getElementById('btnMuteAll').addEventListener('click', function(){
+    sonidoGlobalActivo = !sonidoGlobalActivo;
+    guardarPreferenciaSonido();
+    actualizarBotonSonidoGlobal();
+
+    document.querySelectorAll('.short-card video, .short-card audio').forEach(m => {
+        m.muted = !sonidoGlobalActivo;
+    });
+    document.querySelectorAll('.mute-badge').forEach(b => {
+        b.textContent = sonidoGlobalActivo ? '🔊' : '🔇';
+    });
+    document.querySelectorAll('iframe[id^="yt-"]').forEach(iframe => {
+        try{
+            iframe.contentWindow.postMessage(JSON.stringify({
+                event:'command', func: sonidoGlobalActivo ? 'unMute' : 'mute', args:[]
+            }), '*');
+        }catch(e){}
+    });
+    mostrarToast(sonidoGlobalActivo ? "Sonido activado en todos los shorts 📢" : "Todos los shorts silenciados 🔇");
+});
 
 /* ---------- Likes / Favoritos con notificaciones ---------- */
 function toggleLike(id){
@@ -906,14 +1167,14 @@ function toggleLike(id){
     s.liked = !s.liked;
     s.likes += s.liked ? 1 : -1;
     guardarShorts();
-    
+
     const btn = document.getElementById('like-'+id);
     if(btn){
         btn.classList.toggle('liked', s.liked);
         btn.querySelector('.ic').textContent = s.liked ? '💖' : '💔';
         document.getElementById('likeCount-'+id).textContent = s.likes;
     }
-    
+
     if(s.liked){
         const burst = document.getElementById('burst-'+id);
         if(burst){
@@ -932,18 +1193,23 @@ function toggleFavorito(id){
     s.faved = !s.faved;
     s.favoritos += s.faved ? 1 : -1;
     guardarShorts();
-    
+
     const btn = document.getElementById('fav-'+id);
     if(btn){
         btn.classList.toggle('faved', s.faved);
         btn.querySelector('.ic').textContent = s.faved ? '⭐' : '☆';
         document.getElementById('favCount-'+id).textContent = s.favoritos;
     }
-    
+
+    // Si estamos viendo la lista de favoritos y se quita uno, se retira de la vista al instante
+    if(vistaActual === 'favoritos' && !s.faved){
+        renderShorts();
+    }
+
     mostrarToast(s.faved ? "Guardado en favoritos ⭐" : "Quitado de favoritos");
 }
 
-/* ---------- Comentarios corregidos sin recargar ---------- */
+/* ---------- Comentarios sin recargar ---------- */
 function abrirComentarios(id){
     shortActivoId = id;
     const s = shorts.find(x => x.id === id);
@@ -989,26 +1255,24 @@ function agregarComentario(){
     if(!input) return;
     const texto = input.value.trim();
     if(!texto) return;
-    
+
     const s = shorts.find(x => x.id === shortActivoId);
     if(!s) return;
-    
+
     s.comentarios = s.comentarios || [];
     s.comentarios.push({ usuario: 'Tú', texto: texto, fecha: Date.now() });
     guardarShorts();
-    
-    // Actualizar el contador en la tarjeta sin recargar el video o la página
+
     const counterEl = document.getElementById('commentCount-' + shortActivoId);
     if(counterEl){
         counterEl.textContent = s.comentarios.length;
     }
 
-    // Actualizar la lista interna de comentarios del modal fluidamente
     renderListaComentariosInterna(s);
     mostrarToast("Comentario publicado 🌐");
 }
 
-/* ---------- Compartir ---------- */
+/* ---------- Compartir / Descargar ---------- */
 function abrirCompartir(id){
     shortActivoId = id;
     document.getElementById('modalCompartir').classList.add('show');
@@ -1016,7 +1280,7 @@ function abrirCompartir(id){
 function cerrarCompartir(){
     document.getElementById('modalCompartir').classList.remove('show');
 }
-function compartirEn(canal){
+async function compartirEn(canal){
     const s = shorts.find(x => x.id === shortActivoId);
     if(!s){ cerrarCompartir(); return; }
     const url = `${location.origin}${location.pathname}#${s.id}`;
@@ -1030,6 +1294,9 @@ function compartirEn(canal){
             } else {
                 mostrarToast("No se pudo copiar el enlace");
             }
+            break;
+        case 'descargar':
+            await descargarShort(s);
             break;
         case 'whatsapp':
             target = `https://wa.me/?text=${encodeURIComponent(texto + ' ' + url)}`;
@@ -1047,10 +1314,6 @@ function compartirEn(canal){
             target = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto)}`;
             mostrarToast("Abriendo Telegram ↗");
             break;
-        case 'youtube':
-            target = `https://www.youtube.com/upload`;
-            mostrarToast("Abriendo YouTube Studio para compartir contenido...");
-            break;
         case 'correo':
             target = `mailto:?subject=${encodeURIComponent('Mira este Short')}&body=${encodeURIComponent(texto + ' ' + url)}`;
             mostrarToast("Abriendo aplicación de correo ↗");
@@ -1066,6 +1329,34 @@ function compartirEn(canal){
     if(target) window.open(target, '_blank', 'noopener,noreferrer');
     cerrarCompartir();
 }
+async function descargarShort(s){
+    if(s.tipo === 'youtube'){
+        mostrarToast("No se puede descargar contenido de YouTube desde aquí.");
+        return;
+    }
+    if(s.storageId){
+        try{
+            const blob = await obtenerMediaBlob(s.storageId);
+            if(!blob){ mostrarToast("No se encontró el archivo original."); return; }
+            const a = document.createElement('a');
+            const objUrl = URL.createObjectURL(blob);
+            a.href = objUrl;
+            a.download = s.filename || (s.titulo || 'wshort') + (s.tipo === 'audio' ? '.mp3' : '.mp4');
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(()=> URL.revokeObjectURL(objUrl), 4000);
+            mostrarToast("Descargando short ⬇️");
+        }catch(e){
+            mostrarToast("No se pudo descargar el archivo.");
+        }
+    } else if(s.src){
+        window.open(s.src, '_blank', 'noopener,noreferrer');
+        mostrarToast("Abriendo enlace original para descargar ⬇️");
+    } else {
+        mostrarToast("Este short no tiene un archivo descargable.");
+    }
+}
 
 /* ---------- Modal Crear ---------- */
 function abrirModalCrear(){
@@ -1075,6 +1366,10 @@ function abrirModalCrear(){
 }
 function cerrarModalCrear(){
     document.getElementById('modalCrear').classList.remove('show');
+    if(archivoMediaObjectUrl){
+        URL.revokeObjectURL(archivoMediaObjectUrl);
+        archivoMediaObjectUrl = null;
+    }
 }
 function resetFormCrear(){
     document.getElementById('fTitulo').value = '';
@@ -1085,32 +1380,58 @@ function resetFormCrear(){
     document.getElementById('fEfecto').value = 'fx-none';
     document.getElementById('fKids').checked = false;
     document.getElementById('fComentarios').checked = true;
-    document.getElementById('videoFileName').textContent = 'Seleccionar archivo .mp4 desde el explorador';
+    document.getElementById('videoFileName').textContent = 'Seleccionar archivo desde el explorador';
     document.getElementById('thumbFileName').textContent = 'Seleccionar imagen de miniatura';
     document.getElementById('thumbPreview').style.display = 'none';
     document.getElementById('videoPreviewBox').style.display = 'none';
+    document.getElementById('videoPreviewEl').style.display = 'none';
+    document.getElementById('audioPreviewEl').style.display = 'none';
     document.getElementById('trimWrap').style.display = 'none';
-    archivoVideoBase64 = null;
-    archivoVideoNombre = '';
+    if(archivoMediaObjectUrl){ URL.revokeObjectURL(archivoMediaObjectUrl); }
+    archivoMediaBlob = null;
+    archivoMediaTipo = null;
+    archivoMediaNombre = '';
+    archivoMediaObjectUrl = null;
     archivoThumbBase64 = null;
 }
 
-/* Selección de archivo de video */
+/* Selección de archivo de video o audio (usa un Object URL, no base64, para no saturar memoria) */
 document.getElementById('fVideoFile').addEventListener('change', function(e){
     const file = e.target.files[0];
     if(!file) return;
+
+    const esAudio = file.type.startsWith('audio') || /\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(file.name);
+    const esVideo = file.type.startsWith('video') || /\.(mp4|webm|mov|mkv|m4v)$/i.test(file.name);
+
+    if(!esAudio && !esVideo){
+        mostrarToast("⚠️ Formato no soportado. Usa video (mp4, webm...) o audio (mp3, wav...)");
+        return;
+    }
+
     document.getElementById('fVideoUrl').value = '';
     document.getElementById('videoFileName').textContent = file.name;
-    mostrarToast("Video seleccionado correctamente 📁");
+    mostrarToast(esAudio ? "Audio seleccionado correctamente 🎧" : "Video seleccionado correctamente 📁");
 
-    const reader = new FileReader();
-    reader.onload = function(ev){
-        archivoVideoBase64 = ev.target.result;
-        archivoVideoNombre = file.name;
-        const box = document.getElementById('videoPreviewBox');
-        const videoEl = document.getElementById('videoPreviewEl');
-        box.style.display = 'block';
-        videoEl.src = archivoVideoBase64;
+    if(archivoMediaObjectUrl){ URL.revokeObjectURL(archivoMediaObjectUrl); }
+    archivoMediaBlob = file;
+    archivoMediaTipo = esAudio ? 'audio' : 'video';
+    archivoMediaNombre = file.name;
+    archivoMediaObjectUrl = URL.createObjectURL(file);
+
+    const box = document.getElementById('videoPreviewBox');
+    const videoEl = document.getElementById('videoPreviewEl');
+    const audioEl = document.getElementById('audioPreviewEl');
+    box.style.display = 'block';
+
+    if(esAudio){
+        videoEl.style.display = 'none';
+        audioEl.style.display = 'block';
+        audioEl.src = archivoMediaObjectUrl;
+        document.getElementById('trimWrap').style.display = 'none';
+    } else {
+        audioEl.style.display = 'none';
+        videoEl.style.display = 'block';
+        videoEl.src = archivoMediaObjectUrl;
         videoEl.onloadedmetadata = function(){
             const dur = videoEl.duration || 0;
             const trimWrap = document.getElementById('trimWrap');
@@ -1121,23 +1442,25 @@ document.getElementById('fVideoFile').addEventListener('change', function(e){
             startInp.value = 0; endInp.value = dur;
             actualizarEtiquetasTrim();
         };
-    };
-    reader.readAsDataURL(file);
-});
-
-/* Enlace de video */
-document.getElementById('fVideoUrl').addEventListener('input', function(e){
-    if(e.target.value.trim()){
-        document.getElementById('fVideoFile').value = '';
-        document.getElementById('videoFileName').textContent = 'Seleccionar archivo .mp4 desde el explorador';
-        archivoVideoBase64 = null;
-        document.getElementById('videoPreviewBox').style.display = 'none';
-        document.getElementById('trimWrap').style.display = 'none';
-        mostrarToast("Enlace de video agregado 🔗");
     }
 });
 
-/* Selección de miniatura */
+/* Enlace de video/audio/YouTube/otra página */
+document.getElementById('fVideoUrl').addEventListener('input', function(e){
+    if(e.target.value.trim()){
+        document.getElementById('fVideoFile').value = '';
+        document.getElementById('videoFileName').textContent = 'Seleccionar archivo desde el explorador';
+        if(archivoMediaObjectUrl){ URL.revokeObjectURL(archivoMediaObjectUrl); }
+        archivoMediaBlob = null;
+        archivoMediaTipo = null;
+        archivoMediaObjectUrl = null;
+        document.getElementById('videoPreviewBox').style.display = 'none';
+        document.getElementById('trimWrap').style.display = 'none';
+        mostrarToast("Enlace agregado 🔗");
+    }
+});
+
+/* Selección de miniatura (imagen ligera, sí se guarda como base64) */
 document.getElementById('fThumbFile').addEventListener('change', function(e){
     const file = e.target.files[0];
     if(!file) return;
@@ -1182,19 +1505,20 @@ function publicarShort(){
         mostrarToast("📛 Ponle un nombre a tu short");
         return;
     }
-    if(!archivoVideoBase64 && !videoUrl){
-        mostrarToast("➕ Sube un video .mp4 o pega un enlace");
+    if(!archivoMediaBlob && !videoUrl){
+        mostrarToast("➕ Sube un archivo o pega un enlace");
         return;
     }
 
     let nuevoShort;
     const ytId = videoUrl ? getYoutubeId(videoUrl) : null;
+    const nuevoId = uid();
 
-    if(archivoVideoBase64){
-        const start = parseFloat(document.getElementById('trimStart').value) || 0;
-        const end = parseFloat(document.getElementById('trimEnd').value) || 0;
+    if(archivoMediaBlob){
+        const start = archivoMediaTipo === 'video' ? (parseFloat(document.getElementById('trimStart').value) || 0) : 0;
+        const end = archivoMediaTipo === 'video' ? (parseFloat(document.getElementById('trimEnd').value) || 0) : 0;
         nuevoShort = {
-            id: uid(), tipo:'video', src: archivoVideoBase64,
+            id: nuevoId, tipo: archivoMediaTipo, storageId: nuevoId, filename: archivoMediaNombre,
             thumb: archivoThumbBase64 || '',
             titulo, descripcion, usuario:'Tú',
             kids, comentariosActivos, efecto,
@@ -1204,7 +1528,7 @@ function publicarShort(){
         };
     } else if(ytId){
         nuevoShort = {
-            id: uid(), tipo:'youtube', ytId,
+            id: nuevoId, tipo:'youtube', ytId,
             thumb: archivoThumbBase64 || `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
             titulo, descripcion, usuario:'Tú',
             kids, comentariosActivos, efecto,
@@ -1212,9 +1536,30 @@ function publicarShort(){
             likes:0, favoritos:0, comentarios:[], liked:false, faved:false,
             fecha: Date.now()
         };
-    } else {
+    } else if(esEnlaceDeAudioDirecto(videoUrl)){
         nuevoShort = {
-            id: uid(), tipo:'video', src: videoUrl,
+            id: nuevoId, tipo:'audio', src: videoUrl,
+            thumb: archivoThumbBase64 || '',
+            titulo, descripcion, usuario:'Tú',
+            kids, comentariosActivos, efecto,
+            trimStart:0, trimEnd:0,
+            likes:0, favoritos:0, comentarios:[], liked:false, faved:false,
+            fecha: Date.now()
+        };
+    } else if(esEnlaceDeVideoDirecto(videoUrl)){
+        nuevoShort = {
+            id: nuevoId, tipo:'video', src: videoUrl,
+            thumb: archivoThumbBase64 || '',
+            titulo, descripcion, usuario:'Tú',
+            kids, comentariosActivos, efecto,
+            trimStart:0, trimEnd:0,
+            likes:0, favoritos:0, comentarios:[], liked:false, faved:false,
+            fecha: Date.now()
+        };
+    } else {
+        // Cualquier otra página: se incrusta como iframe genérico
+        nuevoShort = {
+            id: nuevoId, tipo:'iframe', src: videoUrl,
             thumb: archivoThumbBase64 || '',
             titulo, descripcion, usuario:'Tú',
             kids, comentariosActivos, efecto,
@@ -1224,11 +1569,11 @@ function publicarShort(){
         };
     }
 
-    simularSubida(nuevoShort);
+    simularSubida(nuevoShort, archivoMediaBlob);
 }
 
-/* ---------- Animación de subida ---------- */
-function simularSubida(nuevoShort){
+/* ---------- Animación de subida + guardado real en IndexedDB ---------- */
+function simularSubida(nuevoShort, blobArchivo){
     subidaCancelada = false;
     cerrarModalCrear();
     const overlay = document.getElementById('uploadOverlay');
@@ -1248,7 +1593,7 @@ function simularSubida(nuevoShort){
     mostrarToast("Iniciando subida del short 🚀");
 
     let progreso = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
         if(subidaCancelada){
             clearInterval(interval);
             overlay.classList.remove('show');
@@ -1262,20 +1607,32 @@ function simularSubida(nuevoShort){
 
         if(progreso >= 100){
             clearInterval(interval);
+
+            // Guarda el archivo real en IndexedDB (soporta videos/audios grandes sin llenar localStorage)
+            let guardadoOk = true;
+            if(blobArchivo){
+                try{
+                    await guardarMediaBlob(nuevoShort.storageId, blobArchivo);
+                }catch(e){
+                    guardadoOk = false;
+                }
+            }
+
             ring.style.display = 'none';
             check.style.display = 'block';
-            title.textContent = '¡Short publicado!';
-            sub.textContent = 'Tu video ya está en el feed';
+            title.textContent = guardadoOk ? '¡Short publicado!' : 'Publicado con advertencia';
+            sub.textContent = guardadoOk ? 'Tu video ya está en el feed' : 'No se pudo guardar el archivo completo';
             cancelBtn.style.display = 'none';
 
             shorts.unshift(nuevoShort);
-            const ok = guardarShorts();
+            const okMeta = guardarShorts();
+            vistaActual = 'todos';
             renderShorts();
 
             setTimeout(() => {
                 overlay.classList.remove('show');
-                mostrarToast(ok ? "¡Short publicado con éxito! 🎬" : "Publicado (sin guardar el archivo por espacio)");
-                scrollFeedTop();
+                mostrarToast(guardadoOk && okMeta ? "¡Short publicado con éxito! 🎬" : "Publicado, pero revisa el almacenamiento del navegador");
+                scrollFeedTop(false);
             }, 900);
         }
     }, 220);
@@ -1286,30 +1643,27 @@ function cancelarSubida(){
     subidaCancelada = true;
 }
 
-/* ---------- Varios ---------- */
-function scrollFeedTop(){
-    document.getElementById('feed').scrollTo({ top:0, behavior:'smooth' });
-    mostrarToast("Desplazado al inicio ⬆️");
-}
+/* ---------- Navegación lateral: Inicio / Favoritos / Recientes ---------- */
+document.getElementById('sideInicio').addEventListener('click', irAInicio);
 document.getElementById('sideFavoritos').addEventListener('click', () => {
-    const favs = shorts.filter(s => s.faved);
-    if(favs.length === 0){
-        mostrarToast("Aún no tienes shorts favoritos ⭐");
-        return;
-    }
-    const original = shorts;
-    shorts = favs;
+    vistaActual = 'favoritos';
     renderShorts();
-    shorts = original;
-    mostrarToast(`Mostrando ${favs.length} favorito(s) ⭐`);
+    scrollFeedTop(false);
+    const total = shorts.filter(s=>s.faved).length;
+    mostrarToast(total ? `Mostrando ${total} favorito(s) ⭐` : "Aún no tienes shorts favoritos ⭐");
 });
-document.getElementById('btnMuteAll').addEventListener('click', function(){
-    const videos = document.querySelectorAll('.short-card video');
-    const anyUnmuted = Array.from(videos).some(v => !v.muted);
-    videos.forEach(v => v.muted = anyUnmuted);
-    this.textContent = anyUnmuted ? '🔇 Sonido' : '📢 Sonido';
-    mostrarToast(anyUnmuted ? "Videos silenciados 🔇" : "Sonido global activado 📢");
+document.getElementById('sideRecientes').addEventListener('click', () => {
+    vistaActual = 'recientes';
+    renderShorts();
+    scrollFeedTop(false);
+    mostrarToast("Mostrando los shorts más recientes ⏰");
 });
+
+/* ---------- Varios ---------- */
+function scrollFeedTop(avisar){
+    document.getElementById('feed').scrollTo({ top:0, behavior:'smooth' });
+    if(avisar !== false) mostrarToast("Desplazado al inicio ⬆️");
+}
 
 /* Cerrar modales al hacer click fuera */
 document.querySelectorAll('.modal-overlay').forEach(ov => {
@@ -1322,6 +1676,7 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 });
 
 /* ---------- Init ---------- */
+cargarPreferenciaSonido();
 cargarShorts();
 renderShorts();
 </script>
