@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="img/cuenta.png" type="image/png">
 <title>AuraVivo — Directos en vivo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -372,12 +371,20 @@
       <form class="auth-form active" id="form-login" onsubmit="manejarLogin(event)">
         <div>
           <label class="field-label">Correo o Usuario</label>
-          <input class="field-input" id="login-user" placeholder="ej. usuario o correo" required>
+          <input class="field-input" id="login-user" placeholder="ej. sofia_live o sofia@correo.com" required>
         </div>
         <div>
           <label class="field-label">Contraseña</label>
           <input class="field-input" type="password" id="login-pass" placeholder="••••••••" required>
         </div>
+
+
+
+<a href="#" onclick="abrirModalRecuperacion(event)">
+    ¿Olvidaste tu contraseña?
+</a>
+
+
         <button class="btn btn-grad" type="submit" style="margin-top:6px;"><i class="fa-solid fa-right-to-bracket"></i> Entrar al directo</button>
         <p class="auth-note">Si no tienes cuenta, puedes registrarte arriba en la pestaña de Registro.</p>
       </form>
@@ -388,11 +395,15 @@
           <input class="field-input" id="reg-display" placeholder="ej. Sofía Streamer" required>
         </div>
         <div>
-          <label class="field-label">Correo o Nombre de usuario único</label>
+          <label class="field-label">Nombre de usuario único</label>
           <input class="field-input" id="reg-user" placeholder="ej. sofia_live" required>
         </div>
         <div>
-          <label class="field-label">Contraseña (mín. 4 caracteres)</label>
+          <label class="field-label">Correo electrónico</label>
+          <input class="field-input" type="email" id="reg-email" placeholder="ej. sofia@correo.com" required>
+        </div>
+        <div>
+          <label class="field-label">Contraseña (mín. 6 caracteres)</label>
           <input class="field-input" type="password" id="reg-pass" placeholder="••••••••" required>
         </div>
         <button class="btn btn-grad" type="submit" style="margin-top:6px;"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button>
@@ -658,6 +669,43 @@
   </div>
 </div>
 
+<div class="modal-veil" id="modal-recuperar">
+  <div class="modal-box" style="max-width:380px;">
+    <i class="fa-solid fa-xmark modal-close-x" onclick="cerrarModal('modal-recuperar')"></i>
+
+    <div id="recuperar-form-wrap" style="display:flex; flex-direction:column;">
+      <div style="width:52px;height:52px;border-radius:14px;background:rgba(138,92,246,.16);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+        <i class="fa-solid fa-key" style="color:var(--violet); font-size:19px;"></i>
+      </div>
+      <h3>Recuperar contraseña</h3>
+      <p class="sub">Ingresa el correo con el que te registraste y te enviaremos un enlace para restablecer tu contraseña.</p>
+
+      <div style="margin-bottom:6px;">
+        <label class="field-label">Correo electrónico</label>
+        <input class="field-input" type="email" id="recuperar-email" placeholder="tucorreo@ejemplo.com" onkeypress="if(event.key==='Enter')enviarRecuperacion()">
+      </div>
+
+      <p id="recuperar-error" style="display:none; color:var(--danger); font-size:12px; font-weight:600; margin:6px 0 0; display:flex; align-items:center; gap:6px;">
+        <i class="fa-solid fa-circle-exclamation"></i> <span></span>
+      </p>
+
+      <button class="btn btn-grad" id="btn-recuperar" style="margin-top:16px;" onclick="enviarRecuperacion()">
+        <i class="fa-solid fa-paper-plane"></i> Enviar enlace de recuperación
+      </button>
+      <p class="auth-note" style="margin-top:12px; text-align:center;">¿Recordaste tu contraseña? <a href="#" style="color:var(--violet); font-weight:700;" onclick="cerrarModal('modal-recuperar'); return false;">Volver a iniciar sesión</a></p>
+    </div>
+
+    <div id="recuperar-exito" style="display:none; flex-direction:column; align-items:center; text-align:center; padding:6px 0;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(61,220,151,.15);display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+        <i class="fa-solid fa-check" style="color:var(--ok); font-size:22px;"></i>
+      </div>
+      <h3>Revisa tu correo</h3>
+      <p class="sub">Te enviamos un enlace a <b id="recuperar-email-mostrado" style="color:var(--hi);"></b> para restablecer tu contraseña. Revisa también la carpeta de spam.</p>
+      <button class="btn btn-ghost" style="width:100%; margin-top:8px;" onclick="cerrarModal('modal-recuperar')">Entendido</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =========================================================================
    AURAVIVO — Plataforma de directos, front-end 100% autocontenido.
@@ -796,30 +844,37 @@ function cargarCuentas(){
 function guardarCuentas(obj){ localStorage.setItem(K_ACCOUNTS, JSON.stringify(obj)); }
 function obtenerCuenta(username){ return cargarCuentas()[username?.toLowerCase()] || null; }
 
-function registrarCuenta(displayName, username, pass){
-  const key = username.trim().toLowerCase();
-  if(!key || !displayName.trim() || !pass) return { ok:false, msg:'Completa todos los campos.' };
-  if(pass.length < 4) return { ok:false, msg:'La contraseña debe tener al menos 4 caracteres.' };
-  const cuentas = cargarCuentas();
-  if(cuentas[key]) return { ok:false, msg:'Ese nombre de usuario ya existe.' };
-  cuentas[key] = {
-    username:key,
-    displayName: displayName.trim(),
-    passHash: obscurecer(pass),
-    avatar:null,
-    bio:'',
-    createdAt: Date.now()
-  };
-  guardarCuentas(cuentas);
-  return { ok:true };
+// ============ AUTENTICACIÓN REAL CON FIREBASE AUTH ============
+// El perfil (nombre, avatar, bio, username @handle) se sigue guardando
+// en localStorage, pero la CUENTA y la CONTRASEÑA ahora las gestiona
+// Firebase Authentication de verdad. Por eso "recuperar contraseña"
+// ya funciona: el usuario existe realmente en Firebase.
+
+function traducirErrorFirebase(err){
+  const code = err && err.code;
+  switch(code){
+    case 'auth/email-already-in-use': return 'Ese correo ya tiene una cuenta registrada.';
+    case 'auth/invalid-email': return 'El correo no tiene un formato válido.';
+    case 'auth/weak-password': return 'La contraseña es muy débil (mínimo 6 caracteres).';
+    case 'auth/user-not-found': return 'No existe ninguna cuenta con ese correo.';
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential': return 'Correo/usuario o contraseña incorrectos.';
+    case 'auth/too-many-requests': return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+    case 'auth/network-request-failed': return 'Sin conexión a internet. Revisa tu red e inténtalo de nuevo.';
+    case 'auth/requires-recent-login': return 'Por seguridad, vuelve a iniciar sesión antes de cambiar tu contraseña.';
+    default: return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  }
 }
 
-function validarLogin(username, pass){
-  const key = username.trim().toLowerCase();
-  const c = obtenerCuenta(key);
-  if(!c) return { ok:false, msg:'La cuenta no existe.' };
-  if(c.passHash !== obscurecer(pass)) return { ok:false, msg:'Contraseña incorrecta.' };
-  return { ok:true, username:key };
+// Dado lo que la persona escribió en el campo de login (correo o usuario),
+// devuelve el correo real que hay que mandarle a Firebase.
+function resolverCorreoDesdeEntrada(entrada){
+  const valor = entrada.trim();
+  if(/\S+@\S+\.\S+/.test(valor)){
+    return valor; // ya escribió un correo
+  }
+  const c = obtenerCuenta(valor.toLowerCase());
+  return c ? c.email : null;
 }
 
 function actualizarCuenta(username, cambios){
@@ -935,38 +990,90 @@ function cambiarAuthTab(tab){
   $('form-register').classList.toggle('active', tab==='register');
 }
 
-function manejarLogin(e){
+async function manejarLogin(e){
   e.preventDefault();
-  const u = $('login-user').value.trim();
+  const entrada = $('login-user').value.trim();
   const p = $('login-pass').value;
-  const res = validarLogin(u, p);
-  if(!res.ok){
-    toast(res.msg, 'err');
+
+  const email = resolverCorreoDesdeEntrada(entrada);
+  if(!email){
+    toast('No encontramos esa cuenta en este navegador.', 'err');
     return;
   }
-  estado.usuario = res.username;
-  localStorage.setItem(K_SESSION, res.username);
-  toast('¡Bienvenido de nuevo, ' + obtenerCuenta(res.username).displayName + '!', 'ok');
-  montarApp();
+
+  const btn = e.target.querySelector('button[type=submit]');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
+
+  try{
+    await window.fbIniciarSesion(email, p);
+    const cuenta = obtenerCuentaPorEmail(email) || obtenerCuenta(entrada.toLowerCase());
+    if(!cuenta){
+      toast('Inicio de sesión correcto, pero no encontramos tu perfil en este navegador. Vuelve a registrarte para crear tu perfil local.', 'err');
+      return;
+    }
+    estado.usuario = cuenta.username;
+    localStorage.setItem(K_SESSION, estado.usuario);
+    toast('¡Bienvenido de nuevo, ' + (cuenta ? cuenta.displayName : estado.usuario) + '!', 'ok');
+    montarApp();
+  }catch(err){
+    toast(traducirErrorFirebase(err), 'err');
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
 }
 
-function manejarRegistro(e){
+function obtenerCuentaPorEmail(email){
+  if(!email) return null;
+  return Object.values(cargarCuentas()).find(c => c.email && c.email.toLowerCase() === email.toLowerCase()) || null;
+}
+
+async function manejarRegistro(e){
   e.preventDefault();
-  const d = $('reg-display').value;
-  const u = $('reg-user').value;
+  const d = $('reg-display').value.trim();
+  const u = $('reg-user').value.trim().toLowerCase();
+  const email = $('reg-email').value.trim();
   const p = $('reg-pass').value;
-  const res = registrarCuenta(d, u, p);
-  if(!res.ok){
-    toast(res.msg, 'err');
-    return;
+
+  if(!d || !u || !email || !p){ toast('Completa todos los campos.', 'err'); return; }
+  if(!/^[a-z0-9_\.]+$/.test(u)){ toast('El nombre de usuario solo puede tener letras, números, punto y guion bajo.', 'err'); return; }
+  if(p.length < 6){ toast('La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
+  const cuentas = cargarCuentas();
+  if(cuentas[u]){ toast('Ese nombre de usuario ya existe.', 'err'); return; }
+  if(obtenerCuentaPorEmail(email)){ toast('Ese correo ya está en uso en este navegador.', 'err'); return; }
+
+  const btn = e.target.querySelector('button[type=submit]');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creando cuenta...';
+
+  try{
+    await window.fbCrearUsuario(email, p);
+    cuentas[u] = {
+      username:u,
+      displayName: d,
+      email: email,
+      avatar:null,
+      bio:'',
+      createdAt: Date.now()
+    };
+    guardarCuentas(cuentas);
+    toast('¡Cuenta registrada con éxito! Inicia sesión ahora.', 'ok');
+
+    // Rellenar automáticamente el formulario de login y cambiar a él
+    $('login-user').value = u;
+    $('login-pass').value = '';
+    $('form-register').reset();
+    cambiarAuthTab('login');
+    $('login-pass').focus();
+  }catch(err){
+    toast(traducirErrorFirebase(err), 'err');
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = original;
   }
-  toast('¡Cuenta registrada con éxito! Inicia sesión ahora.', 'ok');
-  
-  // Rellenar automáticamente el formulario de login y cambiar a él
-  $('login-user').value = u.trim();
-  $('login-pass').value = '';
-  cambiarAuthTab('login');
-  $('login-pass').focus();
 }
 
 function cerrarSesion(){
@@ -1513,7 +1620,7 @@ function cambiarFotoPerfil(e){
   reader.readAsDataURL(file);
 }
 
-function guardarPerfil(){
+async function guardarPerfil(){
   const displayName = $('edit-display').value.trim();
   const bio = $('edit-bio').value.trim();
   const pass = $('edit-pass').value;
@@ -1521,16 +1628,23 @@ function guardarPerfil(){
     toast('El nombre no puede estar vacío', 'err');
     return;
   }
-  const cambios = { displayName, bio };
+  if(pass && pass.length < 6){
+    toast('La nueva contraseña debe tener al menos 6 caracteres', 'err');
+    return;
+  }
+
   if(pass){
-    if(pass.length < 4){
-      toast('La contraseña debe tener al menos 4 caracteres', 'err');
+    try{
+      await window.fbCambiarPassword(pass);
+    }catch(err){
+      toast(traducirErrorFirebase(err), 'err');
       return;
     }
-    cambios.passHash = obscurecer(pass);
   }
-  actualizarCuenta(estado.usuario, cambios);
+
+  actualizarCuenta(estado.usuario, { displayName, bio });
   actualizarBadgeUsuario();
+  $('edit-pass').value = '';
   toast('Perfil guardado con éxito', 'ok');
 }
 
@@ -1567,20 +1681,34 @@ function pedirPassUsarCuenta(username){
   setTimeout(()=>$('modal-switch-pass').focus(), 100);
 }
 
-function ejecutarCambioCuentaSeguro(){
+async function ejecutarCambioCuentaSeguro(){
   const pass = $('modal-switch-pass').value;
   const username = estado.cuentaParaCambiar;
-  const res = validarLogin(username, pass);
-  if(!res.ok){
-    toast(res.msg, 'err');
+  const c = obtenerCuenta(username);
+  if(!c || !c.email){
+    toast('No se encontró el correo de esa cuenta.', 'err');
     return;
   }
-  finalizarTransmisionSilenciosa();
-  estado.usuario = res.username;
-  localStorage.setItem(K_SESSION, res.username);
-  cerrarModal('modal-pass-cuenta');
-  toast('Cambiado a cuenta ' + obtenerCuenta(res.username).displayName, 'ok');
-  montarApp();
+
+  const btn = document.querySelector('#modal-pass-cuenta .btn-grad');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando...';
+
+  try{
+    await window.fbIniciarSesion(c.email, pass);
+    finalizarTransmisionSilenciosa();
+    estado.usuario = username;
+    localStorage.setItem(K_SESSION, username);
+    cerrarModal('modal-pass-cuenta');
+    toast('Cambiado a cuenta ' + c.displayName, 'ok');
+    montarApp();
+  }catch(err){
+    toast(traducirErrorFirebase(err), 'err');
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
 }
 
 function pedirEliminarCuenta(username){
@@ -1654,6 +1782,114 @@ function abrirPerfilPublicoPorUsername(username){
 function cerrarModal(id){
   $(id).classList.remove('show');
 }
+</script>
+
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+  import {
+    getAuth,
+    sendPasswordResetEmail,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    updatePassword
+  } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAg8n3AcKE-0QDQYcswUBYZwI702TzPZIU",
+    authDomain: "anthonypg.firebaseapp.com",
+    projectId: "anthonypg",
+    storageBucket: "anthonypg.firebasestorage.app",
+    messagingSenderId: "620424695699",
+    appId: "1:620424695699:web:429c9ace801a5bc75a6266",
+    measurementId: "G-YVFYEWDQ98"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+
+  // ============ REGISTRO / LOGIN / CAMBIO DE CONTRASEÑA (Firebase Auth) ============
+  // Se exponen en "window" porque el script clásico de la app (fuera de
+  // este módulo) es el que maneja los formularios de login/registro.
+
+  window.fbCrearUsuario = function (email, password) {
+    return createUserWithEmailAndPassword(auth, email, password);
+  };
+
+  window.fbIniciarSesion = function (email, password) {
+    return signInWithEmailAndPassword(auth, email, password);
+  };
+
+  window.fbCambiarPassword = function (nuevaPassword) {
+    if (!auth.currentUser) {
+      return Promise.reject({ code: 'auth/requires-recent-login' });
+    }
+    return updatePassword(auth.currentUser, nuevaPassword);
+  };
+
+  // ============ RECUPERAR CONTRASEÑA (Firebase Auth) ============
+  // Se exponen en "window" porque los botones del HTML usan onclick="..."
+  // y este <script type="module"> tiene su propio scope aislado.
+
+  window.abrirModalRecuperacion = function (event) {
+    if (event) event.preventDefault();
+    document.getElementById('recuperar-form-wrap').style.display = 'flex';
+    document.getElementById('recuperar-exito').style.display = 'none';
+    const errorBox = document.getElementById('recuperar-error');
+    errorBox.style.display = 'none';
+    const emailInput = document.getElementById('recuperar-email');
+    emailInput.value = '';
+    document.getElementById('modal-recuperar').classList.add('show');
+    setTimeout(() => emailInput.focus(), 100);
+  };
+
+  window.enviarRecuperacion = function () {
+    const emailInput = document.getElementById('recuperar-email');
+    const email = emailInput.value.trim();
+    const btn = document.getElementById('btn-recuperar');
+    const errorBox = document.getElementById('recuperar-error');
+    const errorText = errorBox.querySelector('span');
+
+    errorBox.style.display = 'none';
+
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      errorText.textContent = 'Ingresa un correo electrónico válido.';
+      errorBox.style.display = 'flex';
+      emailInput.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        document.getElementById('recuperar-email-mostrado').textContent = email;
+        document.getElementById('recuperar-form-wrap').style.display = 'none';
+        document.getElementById('recuperar-exito').style.display = 'flex';
+      })
+      .catch((error) => {
+        let msg = 'No se pudo enviar el correo. Inténtalo de nuevo.';
+        if (error.code === 'auth/invalid-email') msg = 'Ese correo no tiene un formato válido.';
+        else if (error.code === 'auth/user-not-found') msg = 'No existe ninguna cuenta registrada con ese correo.';
+        else if (error.code === 'auth/too-many-requests') msg = 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+        errorText.textContent = msg;
+        errorBox.style.display = 'flex';
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+      });
+  };
 </script>
 </body>
 </html>
