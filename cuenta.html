@@ -261,6 +261,20 @@
         .auth-btn:hover { opacity: 0.95; transform: translateY(-1px); }
         .auth-btn:active { transform: scale(0.98); }
 
+        .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .forgot-pass-link {
+            display: block;
+            text-align: right;
+            margin-top: -8px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: #818cf8;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .forgot-pass-link:hover { text-decoration: underline; }
+
         .profile-view { text-align: center; }
 
         .profile-avatar-wrapper {
@@ -405,6 +419,91 @@
             from { transform: translateY(80px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+
+        /* ============ MODAL RECUPERAR CONTRASEÑA ============ */
+        .modal-overlay-recuperar {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+        }
+        .modal-overlay-recuperar.show { display: flex; }
+        .modal-box-recuperar {
+            width: 100%;
+            max-width: 380px;
+            background: rgba(18, 18, 24, 0.97);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            position: relative;
+            animation: bubbleEntrance 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .modal-close-recuperar {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 18px;
+            line-height: 1;
+            background: none;
+            border: none;
+        }
+        .modal-close-recuperar:hover { color: #fff; }
+        .modal-icon-recuperar {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(99,102,241,0.16);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            font-size: 22px;
+        }
+        .modal-box-recuperar h3 {
+            margin: 0 0 6px 0;
+            font-size: 17px;
+            color: #fff;
+        }
+        .modal-box-recuperar p.sub {
+            margin: 0 0 16px 0;
+            font-size: 12.5px;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+        .recuperar-error-msg {
+            display: none;
+            color: #f87171;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 6px 0 0;
+            align-items: center;
+            gap: 6px;
+        }
+        .recuperar-exito-box {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .recuperar-exito-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
     </style>
 </head>
 
@@ -466,6 +565,8 @@
                             <label>Contraseña</label>
                             <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
                         </div>
+
+                        <a href="#" class="forgot-pass-link" onclick="abrirModalRecuperacion(event)">¿Olvidaste tu contraseña?</a>
 
                         <!-- reCAPTCHA dinámico visible y funcional exclusivo para el Administrador -->
                         <div id="recaptchaContainer" class="form-group hidden">
@@ -580,6 +681,138 @@
         </div>
 
     </div>
+
+    <!-- ============ MODAL RECUPERAR CONTRASEÑA ============ -->
+    <div class="modal-overlay-recuperar" id="modalRecuperar">
+        <div class="modal-box-recuperar">
+            <button type="button" class="modal-close-recuperar" onclick="cerrarModalRecuperacion()">✕</button>
+
+            <div id="recuperarFormWrap">
+                <div class="modal-icon-recuperar">🔑</div>
+                <h3>Recuperar contraseña</h3>
+                <p class="sub">Ingresa el correo con el que te registraste y te enviaremos un enlace para restablecer tu contraseña.</p>
+
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <input type="email" class="" id="recuperarEmailInput" placeholder="tu@gmail.com" style="width:100%; padding:12px 14px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; font-size:14px; box-sizing:border-box;" onkeypress="if(event.key==='Enter')enviarRecuperacionPassword()">
+                </div>
+
+                <p class="recuperar-error-msg" id="recuperarErrorMsg">
+                    <span>⚠️</span> <span id="recuperarErrorTexto"></span>
+                </p>
+
+                <button type="button" class="auth-btn" id="btnEnviarRecuperacion" style="margin-top:14px;" onclick="enviarRecuperacionPassword()">
+                    Enviar enlace de recuperación
+                </button>
+            </div>
+
+            <div class="recuperar-exito-box" id="recuperarExitoBox">
+                <div class="recuperar-exito-icon">✅</div>
+                <h3>Revisa tu correo</h3>
+                <p class="sub">Te enviamos un enlace a <b id="recuperarEmailMostrado" style="color:#fff;"></b> para restablecer tu contraseña. Revisa también la carpeta de spam.</p>
+                <button type="button" class="auth-btn" style="background: rgba(255,255,255,0.08); box-shadow:none;" onclick="cerrarModalRecuperacion()">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ FIREBASE (solo para recuperar contraseña) ============ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import {
+            getAuth,
+            sendPasswordResetEmail,
+            createUserWithEmailAndPassword,
+            fetchSignInMethodsForEmail
+        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAg8n3AcKE-0QDQYcswUBYZwI702TzPZIU",
+            authDomain: "anthonypg.firebaseapp.com",
+            projectId: "anthonypg",
+            storageBucket: "anthonypg.firebasestorage.app",
+            messagingSenderId: "620424695699",
+            appId: "1:620424695699:web:429c9ace801a5bc75a6266",
+            measurementId: "G-YVFYEWDQ98"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Crea (si no existe ya) una cuenta "espejo" en Firebase Auth para que
+        // el correo de recuperación de contraseña tenga a quién mandarle el link.
+        // Esto NO cambia el login/registro visible de WIBSIPROJECT: solo permite
+        // que "¿Olvidaste tu contraseña?" funcione de verdad.
+        window.fbEspejoRegistro = async function (email, password) {
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+            } catch (err) {
+                // Si el correo ya tiene una cuenta espejo, lo ignoramos en silencio.
+                if (err.code !== 'auth/email-already-in-use') {
+                    console.warn('No se pudo crear la cuenta espejo de recuperación:', err.code);
+                }
+            }
+        };
+
+        window.fbEnviarRecuperacion = function (email) {
+            return sendPasswordResetEmail(auth, email);
+        };
+
+        // ============ UI DEL MODAL DE RECUPERAR CONTRASEÑA ============
+        window.abrirModalRecuperacion = function (event) {
+            if (event) event.preventDefault();
+            document.getElementById('recuperarFormWrap').style.display = 'block';
+            document.getElementById('recuperarExitoBox').style.display = 'none';
+            document.getElementById('recuperarErrorMsg').style.display = 'none';
+            const input = document.getElementById('recuperarEmailInput');
+            input.value = document.getElementById('loginEmail').value || '';
+            document.getElementById('modalRecuperar').classList.add('show');
+            setTimeout(() => input.focus(), 100);
+        };
+
+        window.cerrarModalRecuperacion = function () {
+            document.getElementById('modalRecuperar').classList.remove('show');
+        };
+
+        window.enviarRecuperacionPassword = function () {
+            const input = document.getElementById('recuperarEmailInput');
+            const email = input.value.trim();
+            const btn = document.getElementById('btnEnviarRecuperacion');
+            const errorBox = document.getElementById('recuperarErrorMsg');
+            const errorTexto = document.getElementById('recuperarErrorTexto');
+
+            errorBox.style.display = 'none';
+
+            if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                errorTexto.textContent = 'Ingresa un correo electrónico válido.';
+                errorBox.style.display = 'flex';
+                input.focus();
+                return;
+            }
+
+            btn.disabled = true;
+            const textoOriginal = btn.textContent;
+            btn.textContent = 'Enviando...';
+
+            window.fbEnviarRecuperacion(email)
+                .then(() => {
+                    document.getElementById('recuperarEmailMostrado').textContent = email;
+                    document.getElementById('recuperarFormWrap').style.display = 'none';
+                    document.getElementById('recuperarExitoBox').style.display = 'flex';
+                })
+                .catch((error) => {
+                    let msg = 'No se pudo enviar el correo. Inténtalo de nuevo.';
+                    if (error.code === 'auth/invalid-email') msg = 'Ese correo no tiene un formato válido.';
+                    else if (error.code === 'auth/user-not-found') msg = 'No existe ninguna cuenta con ese correo. Regístrate primero.';
+                    else if (error.code === 'auth/too-many-requests') msg = 'Demasiados intentos. Espera unos minutos.';
+                    errorTexto.textContent = msg;
+                    errorBox.style.display = 'flex';
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.textContent = textoOriginal;
+                });
+        };
+    </script>
 
     <script>
         // Credenciales actualizadas del administrador
@@ -758,6 +991,7 @@
             event.preventDefault();
             const nombre = document.getElementById('regName').value.trim();
             const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
             const emailLower = email.toLowerCase();
             const esAdmin = emailLower === CORREO_ADMIN.toLowerCase();
 
@@ -783,6 +1017,13 @@
 
             guardarYRegistrarUsuario(nuevoUsuario);
             mostrarToast("¡Cuenta creada y sesión iniciada con éxito!");
+
+            // Crea en segundo plano una cuenta "espejo" en Firebase Auth con este
+            // mismo correo y contraseña, únicamente para que "¿Olvidaste tu
+            // contraseña?" pueda enviar el correo de recuperación real.
+            if (password && window.fbEspejoRegistro) {
+                window.fbEspejoRegistro(email, password);
+            }
             
             document.getElementById('registerForm').reset();
             
