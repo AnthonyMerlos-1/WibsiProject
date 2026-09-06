@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" href="img/Wshorts.png" type="image/png">
-<title>Wshorts — WibsiProject</title>
+<title>Wshorts — WIBSITIHUB</title>
 <style>
     :root{
         --bg: #0a0a0f;
@@ -483,7 +483,7 @@
     <div class="brand" onclick="window.location.href='index.html'">
         <div class="brand-symbol">W</div>
         <div>
-            <div class="brand-name">WibsiProject<span>.</span></div>
+            <div class="brand-name">WIBSITIHUB<span>.</span></div>
             <div class="brand-sub">WSHORTS</div>
         </div>
     </div>
@@ -790,8 +790,10 @@
 
 <script>
 /* =========================================================
-   WSHORTS — Lógica completa qui se guardara lo que es los videos y el sonido del video
-   del funcionamiento para toda la pagina de Wshorts
+   WSHORTS — Lógica completa con mensajes y sin recargas
+   Videos/audios reales se guardan en IndexedDB (no en
+   localStorage) para evitar el error de "cuota excedida"
+   que hacía que los shorts subidos desaparecieran.
    ========================================================= */
 const STORAGE_KEY   = 'wibsitihub_wshorts_data';
 const SONIDO_KEY    = 'wibsitihub_wshorts_sonido';
