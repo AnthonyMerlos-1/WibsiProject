@@ -344,23 +344,39 @@
             .app {
                 display: block !important;
                 grid-template-columns: none !important;
+                transform: none !important;
+                filter: none !important;
+            }
+            /* Salvaguarda: si el body/html tuviera transform o filter, el menú
+               (position: fixed) quedaría "atrapado" dentro y no se vería bien. */
+            html, body {
+                transform: none !important;
+                filter: none !important;
             }
 
+            /* CORRECCIÓN: forzamos que el menú SIEMPRE sea visible como bloque
+               (por si el CSS original lo pone en display:none en móvil),
+               y lo anclamos a la DERECHA para que se despliegue de derecha a izquierda. */
             .sidebar {
+                display: flex !important;
+                flex-direction: column !important;
+                visibility: visible !important;
                 position: fixed !important;
-                top: 0;
-                left: 0;
+                top: 0 !important;
+                right: 0 !important;
+                left: auto !important;
                 height: 100vh !important;
                 width: 78vw !important;
                 max-width: 300px;
-                z-index: 3000;
+                z-index: 4000 !important;
                 overflow-y: auto;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-                box-shadow: 6px 0 24px rgba(0,0,0,0.5);
+                background: var(--sidebar-bg, #1a1a1a);
+                transform: translateX(100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: -6px 0 24px rgba(0,0,0,0.5);
             }
             .sidebar.sidebar-abierto {
-                transform: translateX(0);
+                transform: translateX(0) !important;
             }
 
             /* Fondo oscuro detrás del menú cuando está abierto */
@@ -369,10 +385,13 @@
                 position: fixed;
                 inset: 0;
                 background: rgba(0,0,0,0.55);
-                z-index: 2500;
+                z-index: 3500;
+                opacity: 0;
+                transition: opacity 0.3s ease;
             }
             .overlay-menu-movil.activo {
                 display: block;
+                opacity: 1;
             }
 
             .main {
@@ -1570,6 +1589,13 @@
 
             if (btnAbrirSubida && modalSubida) {
                 btnAbrirSubida.addEventListener('click', () => {
+                    // INICIO: exigir inicio de sesión antes de subir video (PC y móvil)
+                    if (!haySesionIniciada()) {
+                        mostrarToast("Necesitas iniciar sesión para subir un video 🔐");
+                        window.location.href = 'cuenta.html';
+                        return;
+                    }
+                    // FIN: exigir inicio de sesión
                     modalSubida.style.display = 'flex';
                 });
             }
@@ -1873,6 +1899,33 @@
         }
         /* ============================================================
            FIN: RECORDAR EL ÚLTIMO VIDEO VISTO
+        ============================================================ */
+
+        /* ============================================================
+           INICIO: VERIFICAR SI HAY SESIÓN INICIADA (para exigir login
+           antes de subir video, tanto en PC como en móvil)
+           Revisa las claves más comunes que suele usar cuenta.html.
+           Si tu cuenta.html usa otra clave/nombre para guardar la
+           sesión, avísame y ajusto esta función para que coincida.
+        ============================================================ */
+        function haySesionIniciada() {
+            const posiblesClaves = [
+                'wibsi_sesion_iniciada',
+                'wibsi_usuario',
+                'wibsitihub_usuario',
+                'usuarioActivo',
+                'sesionIniciada'
+            ];
+            for (const clave of posiblesClaves) {
+                const valor = localStorage.getItem(clave) || sessionStorage.getItem(clave);
+                if (valor && valor !== 'false' && valor !== 'null') {
+                    return true;
+                }
+            }
+            return false;
+        }
+        /* ============================================================
+           FIN: VERIFICAR SI HAY SESIÓN INICIADA
         ============================================================ */
 
         function checkPassword() {
