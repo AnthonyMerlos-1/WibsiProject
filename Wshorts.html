@@ -76,6 +76,19 @@
     }
     .top-button:hover{ background: rgba(99,102,241,0.18); border-color: var(--accent);}
     .top-button.ghost{ background:transparent; }
+    .profile-button{
+        display:flex; align-items:center; gap:8px;
+        background: var(--panel-2); border:1px solid var(--border);
+        color:var(--text); padding:6px 12px 6px 6px; border-radius:30px;
+        cursor:pointer; font-size:13px; font-weight:600;
+        transition: all .2s ease;
+    }
+    .profile-button:hover{ background: rgba(99,102,241,0.18); border-color: var(--accent);}
+    .profile-avatar-sm{
+        width:28px;height:28px;border-radius:50%; object-fit:cover;
+        background:var(--accent-grad); display:flex; align-items:center; justify-content:center;
+        font-weight:800; font-size:12px; flex-shrink:0;
+    }
 
     /* ---------- LAYOUT ---------- */
     .app{ display:flex; position:relative; z-index:1; min-height:calc(100vh - 66px); }
@@ -183,13 +196,29 @@
     .short-info{
         position:absolute; left:16px; right:86px; bottom:22px; z-index:4;
     }
-    .short-user{ display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+    .short-user{ display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;}
     .short-avatar{
         width:34px;height:34px;border-radius:50%;
         background:var(--accent-grad); display:flex;align-items:center;justify-content:center;
         font-weight:800; font-size:13px; border:2px solid #fff2;
+        object-fit:cover; flex-shrink:0;
     }
     .short-username{ font-weight:700; font-size:14px;}
+    .short-username .subs-count{ font-weight:500; font-size:11px; color:#d1d5db; opacity:.85; margin-left:4px;}
+    .sub-btn{
+        border:none; border-radius:20px; padding:5px 12px; font-size:11.5px; font-weight:700;
+        cursor:pointer; background:var(--accent-grad); color:#fff;
+        transition: opacity .2s ease, transform .15s ease;
+    }
+    .sub-btn:active{ transform:scale(0.94); }
+    .sub-btn.subscrito{ background:var(--panel-2); border:1px solid var(--border); color:#e5e7eb; }
+    .own-menu-btn{
+        position:absolute; top:14px; right:56px; z-index:5;
+        width:34px;height:34px; border-radius:50%;
+        background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.2);
+        display:flex; align-items:center; justify-content:center;
+        cursor:pointer; font-size:16px; color:#fff;
+    }
     .short-title{ font-weight:700; font-size:15px; margin:0 0 4px; }
     .short-desc{ font-size:13px; color:#e5e7eb; opacity:.92; line-height:1.4;
         display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
@@ -396,6 +425,22 @@
     }
     .comments-disabled{ text-align:center; color:var(--muted); padding:30px 10px; font-size:13.5px; }
 
+    /* ---------- PERFIL ---------- */
+    .perfil-foto-picker{
+        display:flex; align-items:center; gap:16px;
+    }
+    .perfil-foto-preview{
+        width:76px;height:76px;border-radius:50%; object-fit:cover;
+        background:var(--accent-grad); display:flex; align-items:center; justify-content:center;
+        font-weight:800; font-size:26px; border:2px solid var(--border); flex-shrink:0;
+    }
+    .perfil-stats{
+        display:flex; gap:22px; background:rgba(255,255,255,0.05); border:1px solid var(--border);
+        border-radius:12px; padding:14px 18px;
+    }
+    .perfil-stat b{ display:block; font-size:18px; }
+    .perfil-stat span{ font-size:11.5px; color:var(--muted); }
+
     /* ---------- COMPARTIR ---------- */
     .share-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
     .share-opt{
@@ -445,6 +490,10 @@
     <div class="topbar-actions">
         <button class="top-button ghost" onclick="window.location.href='index.html'">← Inicio</button>
         <button class="top-button" id="btnMuteAll">🔊 Sonido</button>
+        <button class="profile-button" id="btnMiPerfil" onclick="abrirModalPerfil(false)">
+            <span class="profile-avatar-sm" id="topbarAvatar">👤</span>
+            <span id="topbarNombre">Mi cuenta</span>
+        </button>
     </div>
 </header>
 
@@ -601,6 +650,85 @@
     </div>
 </div>
 
+<!-- MODAL: PERFIL / CUENTA -->
+<div class="modal-overlay" id="modalPerfil">
+    <div class="modal-box" style="max-width:460px;">
+        <div class="modal-head">
+            <h2 id="perfilModalTitulo">👤 Tu cuenta en Wshorts</h2>
+            <button class="modal-close" id="btnCerrarPerfil" onclick="cerrarModalPerfil()">✕</button>
+        </div>
+        <div class="modal-body">
+            <p class="hint" id="perfilIntroTexto">Elige un nombre para que tus shorts, suscriptores y comentarios se guarden bajo tu cuenta en este navegador.</p>
+
+            <div class="perfil-foto-picker">
+                <div class="perfil-foto-preview" id="perfilFotoPreview">👤</div>
+                <label class="filepick" style="flex:1;">
+                    <span class="ico">🖼️</span>
+                    <div>
+                        <div id="perfilFotoNombre">Foto de perfil (opcional)</div>
+                        <small>JPG, PNG o WEBP</small>
+                    </div>
+                    <input type="file" id="fPerfilFoto" accept="image/*">
+                </label>
+            </div>
+
+            <div class="field">
+                <label>Nombre de usuario</label>
+                <input type="text" id="fPerfilNombre" placeholder="Ej: Ana Phonk" autocomplete="off" maxlength="40">
+            </div>
+
+            <div class="perfil-stats" id="perfilStatsBox" style="display:none;">
+                <div class="perfil-stat"><b id="perfilStatShorts">0</b><span>Shorts</span></div>
+                <div class="perfil-stat"><b id="perfilStatSubs">0</b><span>Suscriptores</span></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="btnCancelarPerfil" onclick="cerrarModalPerfil()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarPerfilActual()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR / ELIMINAR SHORT -->
+<div class="modal-overlay" id="modalEditarShort">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h2>✎ Editar tu Short</h2>
+            <button class="modal-close" onclick="cerrarEditarShort()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label>Nombre del Short</label>
+                <input type="text" id="eTitulo" placeholder="Nombre del short" autocomplete="off">
+            </div>
+            <div class="field">
+                <label>Descripción</label>
+                <textarea id="eDescripcion" rows="3"></textarea>
+            </div>
+            <div class="field" id="eEnlaceCampo">
+                <label>Enlace del video/audio</label>
+                <input type="text" id="eEnlace" placeholder="https://..." autocomplete="off">
+                <div class="hint">Puedes actualizar la dirección (URL) de este short.</div>
+            </div>
+            <div class="field" id="eArchivoCampo">
+                <label>Reemplazar archivo (opcional)</label>
+                <label class="filepick">
+                    <span class="ico">📁</span>
+                    <div>
+                        <div id="eArchivoNombre">Seleccionar nuevo archivo</div>
+                        <small>Sube un archivo nuevo para reemplazar el actual</small>
+                    </div>
+                    <input type="file" id="eArchivoFile" accept="video/*,audio/*">
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" style="background:rgba(244,63,94,0.15); border:1px solid var(--danger); color:#fecdd3;" onclick="eliminarShortDesdeEditor()">🗑️ Eliminar</button>
+            <button class="btn btn-primary" onclick="guardarEdicionShort()">Guardar cambios</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: COMPARTIR -->
 <div class="modal-overlay" id="modalCompartir">
     <div class="modal-box" style="max-width:420px;">
@@ -669,13 +797,20 @@
    ========================================================= */
 const STORAGE_KEY   = 'wibsitihub_wshorts_data';
 const SONIDO_KEY    = 'wibsitihub_wshorts_sonido';
+const PERFILES_KEY  = 'wibsitihub_wshorts_perfiles';
+const PERFIL_ID_KEY = 'wibsitihub_wshorts_perfil_actual';
 const DB_NAME       = 'wibsitihub_wshorts_db';
 const DB_VERSION    = 1;
 const STORE_MEDIA   = 'mediaBlobs';
 
 let shorts = [];
+let perfiles = {};              // id -> {id, nombre, foto, suscriptoresBase, suscriptores:[ids], fecha}
+let perfilActualId = null;
 let vistaActual = 'todos';     // 'todos' | 'favoritos' | 'recientes'
 let shortActivoId = null;
+let editandoShortId = null;
+let editArchivoBlob = null;
+let editArchivoTipo = null;
 let archivoMediaBlob = null;   // Blob del archivo elegido (video o audio)
 let archivoMediaTipo = null;   // 'video' | 'audio'
 let archivoMediaNombre = '';
@@ -770,6 +905,186 @@ function actualizarBotonSonidoGlobal(){
     btn.textContent = sonidoGlobalActivo ? '🔊 Sonido' : '🔇 Sonido';
 }
 
+/* ---------- Cuentas / Perfiles (locales a este navegador, sin contraseña) ---------- */
+function perfilesDemo(){
+    return {
+        'perfil_wibsitihub_lab': { id:'perfil_wibsitihub_lab', nombre:'Wibsitihub Lab', foto:'', suscriptoresBase:340, suscriptores:[], fecha:Date.now() },
+        'perfil_phonk_nation':   { id:'perfil_phonk_nation',   nombre:'Phonk Nation',   foto:'', suscriptoresBase:912, suscriptores:[], fecha:Date.now() },
+        'perfil_night_archive':  { id:'perfil_night_archive',  nombre:'Night Archive',  foto:'', suscriptoresBase:157, suscriptores:[], fecha:Date.now() }
+    };
+}
+function cargarPerfiles(){
+    try{
+        const raw = localStorage.getItem(PERFILES_KEY);
+        perfiles = raw ? JSON.parse(raw) : perfilesDemo();
+    }catch(e){ perfiles = perfilesDemo(); }
+    if(!raw_ok(perfiles)) perfiles = perfilesDemo();
+    try{ perfilActualId = localStorage.getItem(PERFIL_ID_KEY) || null; }catch(e){ perfilActualId = null; }
+}
+function raw_ok(obj){ return obj && typeof obj === 'object'; }
+function guardarPerfiles(){
+    try{
+        localStorage.setItem(PERFILES_KEY, JSON.stringify(perfiles));
+        return true;
+    }catch(e){
+        mostrarToast("⚠️ No se pudo guardar la información de tu cuenta.");
+        return false;
+    }
+}
+function obtenerPerfil(id){
+    return perfiles[id] || null;
+}
+function obtenerPerfilActual(){
+    return perfilActualId ? obtenerPerfil(perfilActualId) : null;
+}
+function contarShortsDe(perfilId){
+    return shorts.filter(s => s.autorId === perfilId).length;
+}
+function contarSuscriptoresDe(perfilId){
+    const p = obtenerPerfil(perfilId);
+    if(!p) return 0;
+    return (p.suscriptoresBase||0) + (p.suscriptores||[]).length;
+}
+function estaSuscrito(perfilId){
+    const p = obtenerPerfil(perfilId);
+    if(!p || !perfilActualId) return false;
+    return (p.suscriptores||[]).includes(perfilActualId);
+}
+function avatarHtmlAutor(autorId, nombreFallback, tamanoClase){
+    const p = obtenerPerfil(autorId);
+    const cls = tamanoClase || 'short-avatar';
+    if(p && p.foto){
+        return `<img class="${cls}" src="${p.foto}" alt="${escapeHtml(p.nombre)}">`;
+    }
+    const nombre = (p ? p.nombre : nombreFallback) || 'W';
+    return `<div class="${cls}">${escapeHtml(nombre.substring(0,2).toUpperCase())}</div>`;
+}
+
+function actualizarUIPerfilTopbar(){
+    const p = obtenerPerfilActual();
+    const av = document.getElementById('topbarAvatar');
+    const nm = document.getElementById('topbarNombre');
+    if(!p){
+        av.innerHTML = '👤';
+        nm.textContent = 'Mi cuenta';
+        return;
+    }
+    av.innerHTML = p.foto ? `<img src="${p.foto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : escapeHtml(p.nombre.substring(0,2).toUpperCase());
+    nm.textContent = p.nombre;
+}
+
+let _fotoPerfilTemp = '';
+function abrirModalPerfil(obligatorio){
+    const p = obtenerPerfilActual();
+    _fotoPerfilTemp = p ? (p.foto || '') : '';
+    document.getElementById('fPerfilNombre').value = p ? p.nombre : '';
+    document.getElementById('fPerfilFoto').value = '';
+    document.getElementById('perfilFotoNombre').textContent = 'Foto de perfil (opcional)';
+    const preview = document.getElementById('perfilFotoPreview');
+    if(_fotoPerfilTemp){
+        preview.innerHTML = `<img src="${_fotoPerfilTemp}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    } else {
+        preview.textContent = (p ? p.nombre.substring(0,2).toUpperCase() : '👤');
+    }
+
+    const statsBox = document.getElementById('perfilStatsBox');
+    if(p){
+        statsBox.style.display = 'flex';
+        document.getElementById('perfilStatShorts').textContent = contarShortsDe(p.id);
+        document.getElementById('perfilStatSubs').textContent = contarSuscriptoresDe(p.id);
+    } else {
+        statsBox.style.display = 'none';
+    }
+
+    document.getElementById('perfilModalTitulo').textContent = p ? '👤 Tu cuenta en Wshorts' : '👋 ¡Bienvenido a Wshorts!';
+    document.getElementById('perfilIntroTexto').textContent = p
+        ? 'Actualiza tu nombre o tu foto de perfil. Se guardan en este navegador.'
+        : 'Elige un nombre para entrar. No necesitas contraseña: tus shorts, suscriptores y comentarios se guardarán bajo este nombre en este navegador.';
+
+    const btnCerrar = document.getElementById('btnCerrarPerfil');
+    const btnCancelar = document.getElementById('btnCancelarPerfil');
+    const esObligatorio = obligatorio && !p;
+    btnCerrar.style.display = esObligatorio ? 'none' : 'flex';
+    btnCancelar.style.display = esObligatorio ? 'none' : 'block';
+
+    document.getElementById('modalPerfil').classList.add('show');
+}
+function cerrarModalPerfil(){
+    if(!obtenerPerfilActual()) return; // no se puede cerrar sin haber creado el perfil
+    document.getElementById('modalPerfil').classList.remove('show');
+}
+document.getElementById('fPerfilFoto').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    document.getElementById('perfilFotoNombre').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+        _fotoPerfilTemp = ev.target.result;
+        const preview = document.getElementById('perfilFotoPreview');
+        preview.innerHTML = `<img src="${_fotoPerfilTemp}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    };
+    reader.readAsDataURL(file);
+});
+function guardarPerfilActual(){
+    const nombre = document.getElementById('fPerfilNombre').value.trim();
+    if(!nombre){
+        mostrarToast("📛 Escribe un nombre para tu cuenta");
+        return;
+    }
+    let p = obtenerPerfilActual();
+    if(!p){
+        const nuevoId = 'perfil_' + uid();
+        p = { id: nuevoId, nombre:'', foto:'', suscriptoresBase:0, suscriptores:[], fecha:Date.now() };
+        perfiles[nuevoId] = p;
+        perfilActualId = nuevoId;
+        try{ localStorage.setItem(PERFIL_ID_KEY, perfilActualId); }catch(e){}
+    }
+    const nombreAnterior = p.nombre;
+    p.nombre = nombre;
+    p.foto = _fotoPerfilTemp || '';
+    guardarPerfiles();
+
+    // Si el nombre cambió, refleja el nuevo nombre en los shorts que ya publicó este usuario
+    if(nombreAnterior !== nombre){
+        shorts.forEach(s => { if(s.autorId === p.id) s.usuario = nombre; });
+        guardarShorts();
+    }
+
+    actualizarUIPerfilTopbar();
+    document.getElementById('modalPerfil').classList.remove('show');
+    renderShorts();
+    mostrarToast(nombreAnterior ? "Perfil actualizado ✔️" : `¡Bienvenido, ${nombre}! 🎉`);
+}
+
+function toggleSuscripcion(autorId){
+    if(!perfilActualId){ abrirModalPerfil(true); return; }
+    if(autorId === perfilActualId){
+        mostrarToast("No puedes suscribirte a tu propia cuenta 🙂");
+        return;
+    }
+    const p = obtenerPerfil(autorId);
+    if(!p) return;
+    p.suscriptores = p.suscriptores || [];
+    const idx = p.suscriptores.indexOf(perfilActualId);
+    if(idx === -1){
+        p.suscriptores.push(perfilActualId);
+        mostrarToast(`Te suscribiste a ${p.nombre} 🔔`);
+    } else {
+        p.suscriptores.splice(idx, 1);
+        mostrarToast(`Ya no sigues a ${p.nombre}`);
+    }
+    guardarPerfiles();
+
+    document.querySelectorAll(`.sub-btn[data-autor="${autorId}"]`).forEach(btn => {
+        const suscrito = estaSuscrito(autorId);
+        btn.classList.toggle('subscrito', suscrito);
+        btn.textContent = suscrito ? 'Suscrito ✓' : 'Suscribirse';
+    });
+    document.querySelectorAll(`.subs-count[data-autor="${autorId}"]`).forEach(el => {
+        el.textContent = `· ${contarSuscriptoresDe(autorId)} suscriptores`;
+    });
+}
+
 /* ---------- Almacenamiento (metadatos en localStorage) ---------- */
 function cargarShorts(){
     try{
@@ -799,21 +1114,21 @@ function shortsDemo(){
         {
             id: uid(), tipo:'video', src:'videos/phonk3.mp4', thumb:'img/paisaje.jpg',
             titulo:'Dentro del futuro digital', descripcion:'Un viaje visual por el futuro digital. #wshorts',
-            usuario:'Wibsitihub Lab', kids:false, comentariosActivos:true, efecto:'fx-none',
+            usuario:'Wibsitihub Lab', autorId:'perfil_wibsitihub_lab', kids:false, comentariosActivos:true, efecto:'fx-none',
             trimStart:0, trimEnd:0, likes:128, favoritos:0, comentarios:[], liked:false, faved:false,
             fecha: Date.now()
         },
         {
             id: uid(), tipo:'video', src:'videos/carro.mp4', thumb:'img/tortuga.jpg',
             titulo:'Drift Phonk Mix', descripcion:'Directo desde la pista. 🚗💨 #phonk #drift',
-            usuario:'Phonk Nation', kids:false, comentariosActivos:true, efecto:'fx-contraste',
+            usuario:'Phonk Nation', autorId:'perfil_phonk_nation', kids:false, comentariosActivos:true, efecto:'fx-contraste',
             trimStart:0, trimEnd:0, likes:452, favoritos:0, comentarios:[], liked:false, faved:false,
             fecha: Date.now()-100000
         },
         {
             id: uid(), tipo:'youtube', ytId: getYoutubeId('https://youtu.be/c95WGXY42jo'), thumb:'img/phonk1.jpg',
             titulo:'Después de medianoche Phonk', descripcion:'Sonidos para la madrugada. #phonknight',
-            usuario:'Night Archive', kids:false, comentariosActivos:true, efecto:'fx-none',
+            usuario:'Night Archive', autorId:'perfil_night_archive', kids:false, comentariosActivos:true, efecto:'fx-none',
             trimStart:0, trimEnd:0, likes:89, favoritos:0, comentarios:[], liked:false, faved:false,
             fecha: Date.now()-200000
         }
@@ -864,6 +1179,7 @@ function crearCardShort(s){
     mediaWrap.className = 'short-media-wrap';
 
     let progresoDisponible = true; // si se puede mostrar/actualizar la barra de progreso
+    const esPropio = !!(perfilActualId && s.autorId === perfilActualId);
 
     if(s.tipo === 'youtube' && s.ytId){
         const params = new URLSearchParams({
@@ -918,6 +1234,7 @@ function crearCardShort(s){
         <div class="short-botfade"></div>
         ${s.kids ? `<div class="kids-badge">👶 Para niños</div>` : ''}
         <div class="mute-badge" id="mutebadge-${s.id}" onclick="toggleMuteCard(event,'${s.id}')">${sonidoGlobalActivo ? '🔊' : '🔇'}</div>
+        ${esPropio ? `<div class="own-menu-btn" onclick="abrirEditarShort(event,'${s.id}')" title="Editar o eliminar">⋮</div>` : ''}
         <div class="play-hint" id="hint-${s.id}">▶</div>
         <div class="heart-burst" id="burst-${s.id}">💖</div>
         ${progresoDisponible ? `
@@ -927,8 +1244,11 @@ function crearCardShort(s){
 
         <div class="short-info">
             <div class="short-user">
-                <div class="short-avatar">${(s.usuario||'W').substring(0,2).toUpperCase()}</div>
-                <span class="short-username">${s.usuario || 'Anónimo'}</span>
+                ${avatarHtmlAutor(s.autorId, s.usuario)}
+                <span class="short-username">${escapeHtml(s.usuario || 'Anónimo')}
+                    <span class="subs-count" data-autor="${s.autorId||''}">${s.autorId ? '· ' + contarSuscriptoresDe(s.autorId) + ' suscriptores' : ''}</span>
+                </span>
+                ${(s.autorId && !esPropio) ? `<button class="sub-btn ${estaSuscrito(s.autorId)?'subscrito':''}" data-autor="${s.autorId}" onclick="toggleSuscripcion('${s.autorId}')">${estaSuscrito(s.autorId) ? 'Suscrito ✓' : 'Suscribirse'}</button>` : ''}
             </div>
             <div class="short-title">${escapeHtml(s.titulo)}</div>
             <div class="short-desc">${escapeHtml(s.descripcion||'')}</div>
@@ -1358,8 +1678,124 @@ async function descargarShort(s){
     }
 }
 
+/* ---------- Editar / eliminar tu propio short ---------- */
+function abrirEditarShort(event, id){
+    if(event) event.stopPropagation();
+    const s = shorts.find(x => x.id === id);
+    if(!s) return;
+    editandoShortId = id;
+    editArchivoBlob = null;
+    editArchivoTipo = null;
+
+    document.getElementById('eTitulo').value = s.titulo || '';
+    document.getElementById('eDescripcion').value = s.descripcion || '';
+    document.getElementById('eArchivoFile').value = '';
+    document.getElementById('eArchivoNombre').textContent = 'Seleccionar nuevo archivo';
+
+    const campoEnlace = document.getElementById('eEnlaceCampo');
+    const campoArchivo = document.getElementById('eArchivoCampo');
+    const inputEnlace = document.getElementById('eEnlace');
+
+    if(s.tipo === 'youtube'){
+        campoEnlace.style.display = 'block';
+        campoArchivo.style.display = 'none';
+        inputEnlace.value = `https://youtu.be/${s.ytId}`;
+    } else if(s.storageId){
+        // Archivo subido: no tiene "enlace" de texto, pero se puede reemplazar el archivo
+        campoEnlace.style.display = 'none';
+        campoArchivo.style.display = 'block';
+    } else {
+        campoEnlace.style.display = 'block';
+        campoArchivo.style.display = 'none';
+        inputEnlace.value = s.src || '';
+    }
+
+    document.getElementById('modalEditarShort').classList.add('show');
+}
+function cerrarEditarShort(){
+    document.getElementById('modalEditarShort').classList.remove('show');
+    editandoShortId = null;
+    editArchivoBlob = null;
+}
+document.getElementById('eArchivoFile').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const esAudio = file.type.startsWith('audio') || /\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(file.name);
+    const esVideo = file.type.startsWith('video') || /\.(mp4|webm|mov|mkv|m4v)$/i.test(file.name);
+    if(!esAudio && !esVideo){
+        mostrarToast("⚠️ Formato no soportado");
+        return;
+    }
+    editArchivoBlob = file;
+    editArchivoTipo = esAudio ? 'audio' : 'video';
+    document.getElementById('eArchivoNombre').textContent = file.name;
+    mostrarToast("Nuevo archivo listo para reemplazar ✔️");
+});
+async function guardarEdicionShort(){
+    const s = shorts.find(x => x.id === editandoShortId);
+    if(!s) return;
+
+    const nuevoTitulo = document.getElementById('eTitulo').value.trim();
+    const nuevaDescripcion = document.getElementById('eDescripcion').value.trim();
+    if(!nuevoTitulo){
+        mostrarToast("📛 Ponle un nombre a tu short");
+        return;
+    }
+    s.titulo = nuevoTitulo;
+    s.descripcion = nuevaDescripcion;
+
+    if(s.tipo === 'youtube'){
+        const nuevoEnlace = document.getElementById('eEnlace').value.trim();
+        const nuevoYtId = getYoutubeId(nuevoEnlace);
+        if(nuevoEnlace && nuevoYtId){
+            s.ytId = nuevoYtId;
+        } else if(nuevoEnlace){
+            mostrarToast("⚠️ Ese enlace no parece de YouTube, se mantuvo el anterior");
+        }
+    } else if(s.storageId){
+        if(editArchivoBlob){
+            try{
+                await guardarMediaBlob(s.storageId, editArchivoBlob);
+                s.tipo = editArchivoTipo;
+                s.filename = editArchivoBlob.name;
+                if(mediaObjectUrls[s.id]){ URL.revokeObjectURL(mediaObjectUrls[s.id]); delete mediaObjectUrls[s.id]; }
+                mostrarToast("Archivo reemplazado ✔️");
+            }catch(e){
+                mostrarToast("⚠️ No se pudo reemplazar el archivo");
+            }
+        }
+    } else {
+        const nuevoEnlace = document.getElementById('eEnlace').value.trim();
+        if(nuevoEnlace) s.src = nuevoEnlace;
+    }
+
+    guardarShorts();
+    cerrarEditarShort();
+    renderShorts();
+    mostrarToast("Short actualizado ✔️");
+}
+async function eliminarShortDesdeEditor(){
+    const s = shorts.find(x => x.id === editandoShortId);
+    if(!s) return;
+    if(!confirm(`¿Eliminar "${s.titulo}"? Esta acción no se puede deshacer.`)) return;
+
+    if(s.storageId){ await borrarMediaBlob(s.storageId); }
+    if(mediaObjectUrls[s.id]){ URL.revokeObjectURL(mediaObjectUrls[s.id]); delete mediaObjectUrls[s.id]; }
+
+    shorts = shorts.filter(x => x.id !== s.id);
+    guardarShorts();
+    cerrarEditarShort();
+    renderShorts();
+    mostrarToast("Short eliminado 🗑️");
+}
+
 /* ---------- Modal Crear ---------- */
 function abrirModalCrear(){
+    if(!obtenerPerfilActual()){
+        abrirModalPerfil(true);
+        mostrarToast("👤 Primero crea tu cuenta para poder publicar");
+        return;
+    }
     resetFormCrear();
     document.getElementById('modalCrear').classList.add('show');
     mostrarToast("Panel de creación abierto ✨");
@@ -1494,6 +1930,12 @@ function actualizarEtiquetasTrim(){
 
 /* ---------- Publicar ---------- */
 function publicarShort(){
+    const perfil = obtenerPerfilActual();
+    if(!perfil){
+        abrirModalPerfil(true);
+        mostrarToast("👤 Primero crea tu cuenta para poder publicar");
+        return;
+    }
     const titulo = document.getElementById('fTitulo').value.trim();
     const descripcion = document.getElementById('fDescripcion').value.trim();
     const videoUrl = document.getElementById('fVideoUrl').value.trim();
@@ -1513,6 +1955,8 @@ function publicarShort(){
     let nuevoShort;
     const ytId = videoUrl ? getYoutubeId(videoUrl) : null;
     const nuevoId = uid();
+    const autorId = perfil.id;
+    const usuario = perfil.nombre;
 
     if(archivoMediaBlob){
         const start = archivoMediaTipo === 'video' ? (parseFloat(document.getElementById('trimStart').value) || 0) : 0;
@@ -1520,7 +1964,7 @@ function publicarShort(){
         nuevoShort = {
             id: nuevoId, tipo: archivoMediaTipo, storageId: nuevoId, filename: archivoMediaNombre,
             thumb: archivoThumbBase64 || '',
-            titulo, descripcion, usuario:'Tú',
+            titulo, descripcion, usuario, autorId,
             kids, comentariosActivos, efecto,
             trimStart: start, trimEnd: end > start ? end : 0,
             likes:0, favoritos:0, comentarios:[], liked:false, faved:false,
@@ -1530,7 +1974,7 @@ function publicarShort(){
         nuevoShort = {
             id: nuevoId, tipo:'youtube', ytId,
             thumb: archivoThumbBase64 || `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
-            titulo, descripcion, usuario:'Tú',
+            titulo, descripcion, usuario, autorId,
             kids, comentariosActivos, efecto,
             trimStart:0, trimEnd:0,
             likes:0, favoritos:0, comentarios:[], liked:false, faved:false,
@@ -1540,7 +1984,7 @@ function publicarShort(){
         nuevoShort = {
             id: nuevoId, tipo:'audio', src: videoUrl,
             thumb: archivoThumbBase64 || '',
-            titulo, descripcion, usuario:'Tú',
+            titulo, descripcion, usuario, autorId,
             kids, comentariosActivos, efecto,
             trimStart:0, trimEnd:0,
             likes:0, favoritos:0, comentarios:[], liked:false, faved:false,
@@ -1550,7 +1994,7 @@ function publicarShort(){
         nuevoShort = {
             id: nuevoId, tipo:'video', src: videoUrl,
             thumb: archivoThumbBase64 || '',
-            titulo, descripcion, usuario:'Tú',
+            titulo, descripcion, usuario, autorId,
             kids, comentariosActivos, efecto,
             trimStart:0, trimEnd:0,
             likes:0, favoritos:0, comentarios:[], liked:false, faved:false,
@@ -1561,7 +2005,7 @@ function publicarShort(){
         nuevoShort = {
             id: nuevoId, tipo:'iframe', src: videoUrl,
             thumb: archivoThumbBase64 || '',
-            titulo, descripcion, usuario:'Tú',
+            titulo, descripcion, usuario, autorId,
             kids, comentariosActivos, efecto,
             trimStart:0, trimEnd:0,
             likes:0, favoritos:0, comentarios:[], liked:false, faved:false,
@@ -1677,8 +2121,13 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 
 /* ---------- Init ---------- */
 cargarPreferenciaSonido();
+cargarPerfiles();
 cargarShorts();
+actualizarUIPerfilTopbar();
 renderShorts();
+if(!obtenerPerfilActual()){
+    abrirModalPerfil(true);
+}
 </script>
 </body>
 </html>
