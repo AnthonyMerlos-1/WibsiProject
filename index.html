@@ -1589,13 +1589,7 @@
 
             if (btnAbrirSubida && modalSubida) {
                 btnAbrirSubida.addEventListener('click', () => {
-                    // INICIO: exigir inicio de sesión antes de subir video (PC y móvil)
-                    if (!haySesionIniciada()) {
-                        mostrarToast("Necesitas iniciar sesión para subir un video 🔐");
-                        window.location.href = 'cuenta.html';
-                        return;
-                    }
-                    // FIN: exigir inicio de sesión
+                    // Eliminada la validación estricta de inicio de sesión para permitir subir video sin restricción:
                     modalSubida.style.display = 'flex';
                 });
             }
@@ -1899,33 +1893,6 @@
         }
         /* ============================================================
            FIN: RECORDAR EL ÚLTIMO VIDEO VISTO
-        ============================================================ */
-
-        /* ============================================================
-           INICIO: VERIFICAR SI HAY SESIÓN INICIADA (para exigir login
-           antes de subir video, tanto en PC como en móvil)
-           Revisa las claves más comunes que suele usar cuenta.html.
-           Si tu cuenta.html usa otra clave/nombre para guardar la
-           sesión, avísame y ajusto esta función para que coincida.
-        ============================================================ */
-        function haySesionIniciada() {
-            const posiblesClaves = [
-                'wibsi_sesion_iniciada',
-                'wibsi_usuario',
-                'wibsitihub_usuario',
-                'usuarioActivo',
-                'sesionIniciada'
-            ];
-            for (const clave of posiblesClaves) {
-                const valor = localStorage.getItem(clave) || sessionStorage.getItem(clave);
-                if (valor && valor !== 'false' && valor !== 'null') {
-                    return true;
-                }
-            }
-            return false;
-        }
-        /* ============================================================
-           FIN: VERIFICAR SI HAY SESIÓN INICIADA
         ============================================================ */
 
         function checkPassword() {
