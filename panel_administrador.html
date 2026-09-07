@@ -433,7 +433,8 @@
             }
 
             /* --- Grid de videos: 2 columnas ordenadas en vez de amontonado --- */
-            .video-grid {
+            .video-grid,
+            #panelVideosContainer {
                 grid-template-columns: repeat(2, 1fr) !important;
                 gap: 10px !important;
             }
@@ -462,7 +463,8 @@
         }
 
         @media (max-width: 420px) {
-            .video-grid {
+            .video-grid,
+            #panelVideosContainer {
                 grid-template-columns: 1fr !important;
             }
         }
@@ -651,18 +653,18 @@
                 </div>
             </section>
 
-            <!-- NUEVO: Panel de gestión de videos añadidos (Historial Detallado) -->
-            <section class="video-section" style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 30px;">
-                <div class="section-heading" style="margin-bottom: 20px;">
+            <!-- NUEVO: Panel de gestión de videos añadidos -->
+            <section class="video-section" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 30px;">
+                <div class="section-heading">
                     <div>
-                        <span class="tiny-label" style="color: #6366f1;">PANEL DE ADMINISTRADOR</span>
-                        <h2>Historial y Control de Videos 📋</h2>
+                        <span class="tiny-label" style="color: #6366f1;">PANEL DE CONTROL</span>
+                        <h2>Panel de Videos Añadidos 📋</h2>
                     </div>
                     <span class="category-count" id="panelContadorVideos">0 videos</span>
                 </div>
-                <div id="panelVideosContainer" style="display: flex; flex-direction: column; gap: 12px;">
-                    <!-- Los videos añadidos aparecerán aquí automáticamente con diseño completo -->
-                    <p style="color: #888; font-size: 13px;">No hay videos detectados en el panel actualmente.</p>
+                <div id="panelVideosContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <!-- Los videos añadidos aparecerán aquí automáticamente -->
+                    <p style="color: #888; font-size: 13px; grid-column: 1 / -1;">No hay videos añadidos recientemente en el panel.</p>
                 </div>
             </section>
 
@@ -1309,10 +1311,6 @@
                         <label style="display: block; font-size: 13px; color: #aaa; margin-bottom: 5px;">Título o Palabras clave (Ej: Phonk, Drift, Videos...)</label>
                         <input type="text" id="inputTituloVideo" placeholder="Escribe el título..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 14px;" autocomplete="off">
                     </div>
-                    <div>
-                        <label style="display: block; font-size: 13px; color: #aaa; margin-bottom: 5px;">Descripción del video</label>
-                        <textarea id="inputDescVideo" placeholder="Escribe una breve descripción..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 14px; resize: vertical;" rows="3"></textarea>
-                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
                             <label style="display: block; font-size: 13px; color: #aaa; margin-bottom: 5px;">Enlace del Video (YouTube o MP4)</label>
@@ -1320,36 +1318,31 @@
                         </div>
                         <div>
                             <label style="display: block; font-size: 13px; color: #aaa; margin-bottom: 5px;">Enlace de miniatura</label>
-                            <input type="text" id="inputPortadaVideo" placeholder="img/portada1.jpg o URL" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 14px;" autocomplete="off">
+                            <input type="text" id="inputPortadaVideo" placeholder="img/portada1.jpg o URL de imagen" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 14px;" autocomplete="off">
                         </div>
                     </div>
                     <button id="btnSubirVideoForm" style="background: #6366f1; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px;">
-                        Publicar y Detectar Historial ✦
+                        Publicar y Detectar Categoría ✦
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal para Editar / Actualizar Video desde el Panel -->
-    <div class="modal" id="modalEditarVideoPanel" style="display: none;">
+    <div class="modal" id="modalEditarVideo" style="display: none;">
         <div class="player-window" style="max-width: 450px; height: auto; padding: 20px;">
             <div class="player-header">
-                <div class="player-brand">WIBSIPROJECT<span>. EDITAR PANEL</span></div>
-                <button onclick="cerrarModalPanel()" style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:16px;">✕</button>
+                <div class="player-brand">WIBSIPROJECT<span>. EDITAR</span></div>
+                <button onclick="cerrarModalEditar()" style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:16px;">✕</button>
             </div>
             <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 12px;">
-                <input type="hidden" id="editPanelId">
+                <input type="hidden" id="editIndexCard">
                 <div>
-                    <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">Título del Video</label>
-                    <input type="text" id="inputEditPanelTitle" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 14px;" autocomplete="off">
+                    <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">Nuevo Título del Video</label>
+                    <input type="text" id="inputEditTitle" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 14px;" autocomplete="off">
                 </div>
-                <div>
-                    <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">Descripción</label>
-                    <textarea id="inputEditPanelDesc" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 14px; resize: vertical;" rows="3"></textarea>
-                </div>
-                <button onclick="guardarEdicionPanel()" style="background: #6366f1; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%;">
-                    Actualizar Cambios ✦
+                <button onclick="guardarEdicionVideo()" style="background: #6366f1; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%;">
+                    Actualizar Título ✦
                 </button>
             </div>
         </div>
@@ -1419,12 +1412,18 @@
             document.body.classList.add(savedTheme);
         }
 
+        // Variable global para almacenar temporalmente los datos del video que se está reproduciendo
         let videoActualReproduciendo = {
             title: "",
             video: "",
             image: ""
         };
 
+        /* ============================================================
+           INICIO: MENÚ MÓVIL (abrir / cerrar barra lateral deslizable)
+           Esto solo tiene efecto visual en pantallas de celular/tablet,
+           en PC el botón permanece oculto y no cambia nada.
+        ============================================================ */
         function mostrarUOcultarBotonMenu() {
             const btnMenu = document.getElementById('btnMenuMovil');
             if (!btnMenu) return;
@@ -1452,13 +1451,18 @@
 
         window.addEventListener('resize', mostrarUOcultarBotonMenu);
 
+        // Al tocar cualquier botón del menú lateral en móvil, se cierra el menú automáticamente
         document.addEventListener('DOMContentLoaded', function() {
             mostrarUOcultarBotonMenu();
             const sidebarBtns = document.querySelectorAll('#sidebarPrincipal .side-link');
             sidebarBtns.forEach(btn => btn.addEventListener('click', cerrarMenuMovil));
         });
+        /* ============================================================
+           FIN: MENÚ MÓVIL
+        ============================================================ */
 
         document.addEventListener("DOMContentLoaded", function() {
+            // Lógica para abrir el modal de compartir desde el reproductor
             const btnCompartirModal = document.getElementById('btnCompartirModal');
             const modalCompartir = document.getElementById('modalCompartir');
             const cerrarModalCompartir = document.getElementById('cerrarModalCompartir');
@@ -1480,6 +1484,7 @@
                 });
             }
 
+            // Evento para el botón de "Guardar" del modal de reproducción
             const btnGuardarModal = document.getElementById('btnGuardarModal');
             if (btnGuardarModal) {
                 btnGuardarModal.addEventListener('click', function() {
@@ -1506,9 +1511,76 @@
                 });
             }
 
+            function sincronizarColecciones() {
+                const coleccionesGuardadas = JSON.parse(localStorage.getItem('wibsitihub_colecciones')) || [];
+                if (coleccionesGuardadas.length > 0) {
+                    console.log("Colecciones sincronizadas:", coleccionesGuardadas);
+                }
+            }
+
+            sincronizarColecciones();
+
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'wibsitihub_colecciones') {
+                    sincronizarColecciones();
+                }
+            });
+
+            let historialVisitas = JSON.parse(localStorage.getItem('wibsitihub_visitas')) || {
+                'index.html': 0,
+                'tendencias.html': 0,
+                'privado.html': 0
+            };
+            historialVisitas['index.html']++;
+            localStorage.setItem('wibsitihub_visitas', JSON.stringify(historialVisitas));
+
+            const metasVideos = document.querySelectorAll('.video-meta span:first-child');
+            metasVideos.forEach(meta => {
+                if (!meta.textContent.trim()) {
+                    meta.textContent = "Sin vistas por el momento";
+                    meta.style.fontStyle = "italic";
+                    meta.style.opacity = "0.7";
+                }
+            });
+
+            const cards = document.querySelectorAll('.video-grid .video-card');
+            cards.forEach((card, index) => {
+                if (card.querySelector('.card-quick-actions')) return;
+
+                const thumbnail = card.querySelector('.thumbnail');
+                if (!thumbnail) return;
+
+                const tituloEl = card.querySelector('.video-title');
+                const videoUrl = card.getAttribute('data-video') || 'https://www.youtube.com/watch?v=pBUlV7rZp_c';
+                const imagenUrl = card.querySelector('img') ? card.querySelector('img').src : 'img/portada1.jpg';
+                const tituloVal = tituloEl ? tituloEl.textContent : `Video ${index}`;
+                const uniqueFavId = 'video_' + index + '_' + tituloVal.replace(/\s+/g, '_');
+                card.setAttribute('data-id', uniqueFavId);
+
+                let favoritosActuales = JSON.parse(localStorage.getItem('wibsi_favoritos')) || [];
+                const esFav = favoritosActuales.includes(uniqueFavId);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'card-quick-actions';
+                actionsDiv.innerHTML = `
+                    <button class="action-chip fav-btn ${esFav ? 'favorito-activo' : ''}" onclick="toggleFavoritoIndex(event, '${uniqueFavId}', this)" title="Marcar como favorito">❤</button>
+                    <button class="action-chip" onclick="abrirModalEditar(event, '${index}', '${tituloVal.replace(/'/g, "\\'")}')" title="Editar título">✏️</button>
+                    <button class="action-chip privado-btn" onclick="enviarAVideoPrivado(event, '${tituloVal.replace(/'/g, "\\'")}', '${videoUrl}', '${imagenUrl}')" title="Guardar como privado">🔒</button>
+                `;
+                
+                thumbnail.style.position = 'relative';
+                thumbnail.appendChild(actionsDiv);
+            });
+
             actualizarPanelVideos();
+
+            // INICIO: recuperar en la cuadrícula principal los videos que el usuario subió antes (persistencia)
             cargarVideosSubidosGuardados();
+            // FIN: recuperar videos subidos
+
+            // INICIO: si había un video reproduciéndose antes de recargar, mostrarlo de nuevo en la barra
             restaurarUltimoVideoAlRecargar();
+            // FIN: restaurar último video
 
             const btnAbrirSubida = document.getElementById('btnAbrirSubida');
             const modalSubida = document.getElementById('modalSubida');
@@ -1517,11 +1589,13 @@
 
             if (btnAbrirSubida && modalSubida) {
                 btnAbrirSubida.addEventListener('click', () => {
+                    // INICIO: exigir inicio de sesión antes de subir video (PC y móvil)
                     if (!haySesionIniciada()) {
                         mostrarToast("Necesitas iniciar sesión para subir un video 🔐");
                         window.location.href = 'cuenta.html';
                         return;
                     }
+                    // FIN: exigir inicio de sesión
                     modalSubida.style.display = 'flex';
                 });
             }
@@ -1555,7 +1629,6 @@
             if (btnSubirVideoForm) {
                 btnSubirVideoForm.addEventListener('click', function() {
                     const titulo = document.getElementById('inputTituloVideo').value.trim();
-                    const descripcion = document.getElementById('inputDescVideo').value.trim() || 'Sin descripción proporcionada.';
                     const urlVideo = document.getElementById('inputUrlVideo').value.trim();
                     const portada = document.getElementById('inputPortadaVideo').value.trim() || 'img/portada1.jpg';
 
@@ -1573,14 +1646,13 @@
 
                     const videoGrid = document.getElementById('videoGrid');
                     if (videoGrid) {
-                        const uniqueFavId = 'custom_' + Date.now() + '_' + titulo.replace(/\s+/g, '_');
-                        
                         const nuevaCard = document.createElement('article');
                         nuevaCard.className = 'video-card';
                         nuevaCard.setAttribute('data-category', categoriaAsignada);
                         nuevaCard.setAttribute('data-title', titulo);
                         nuevaCard.setAttribute('data-video', urlVideo);
                         nuevaCard.setAttribute('data-image', portada);
+                        const uniqueFavId = 'custom_' + Date.now() + '_' + titulo.replace(/\s+/g, '_');
                         nuevaCard.setAttribute('data-id', uniqueFavId);
                         nuevaCard.setAttribute('onclick', `openVideo('${titulo.replace(/'/g, "\\'")}', '${urlVideo}', '${portada}')`);
 
@@ -1616,38 +1688,24 @@
 
                         videoGrid.insertBefore(nuevaCard, videoGrid.firstChild);
                         
-                        // Obtener fecha y hora actual detallada
-                        const ahora = new Date();
-                        const fechaFormateada = ahora.toLocaleDateString() + ' ' + ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
                         let misVideosPanel = JSON.parse(localStorage.getItem('wibsitihub_panel_videos')) || [];
-                        misVideosPanel.unshift({
-                            id: uniqueFavId,
-                            title: titulo,
-                            video: urlVideo,
-                            image: portada,
-                            categoria: categoriaAsignada,
-                            descripcion: descripcion,
-                            usuario: "Anthony Merlos",
-                            correo: "anthony@wibsiproject.com",
-                            fecha: fechaFormateada
-                        });
+                        misVideosPanel.unshift({ id: uniqueFavId, title: titulo, video: urlVideo, image: portada, categoria: categoriaAsignada, descripcion: 'Video subido desde el panel de control de WIBSIPROJECT.' });
                         localStorage.setItem('wibsitihub_panel_videos', JSON.stringify(misVideosPanel));
 
                         actualizarPanelVideos();
 
                         modalSubida.style.display = 'none';
                         document.getElementById('inputTituloVideo').value = '';
-                        document.getElementById('inputDescVideo').value = '';
                         document.getElementById('inputUrlVideo').value = '';
                         document.getElementById('inputPortadaVideo').value = '';
 
-                        mostrarToast("¡Video detectado y añadido al panel de administrador! ✦");
+                        mostrarToast("¡Video publicado y añadido al panel! ✦");
                     }
                 });
             }
         });
 
+        // Funciones auxiliares para compartir
         function compartirRedSocial(red) {
             const titulo = encodeURIComponent(videoActualReproduciendo.title || "¡Mira este increíble video en WibsiProject!");
             const enlace = encodeURIComponent(videoActualReproduciendo.video || window.location.href);
@@ -1716,11 +1774,6 @@
             localStorage.setItem('wibsi_favoritos', JSON.stringify(favoritos));
         }
 
-        /* ============================================================
-           PANEL DE ADMINISTRADOR: RENDERIZAR HISTORIAL CON DISEÑO COMPLETO
-           Muestra imagen, usuario, fecha/hora, correo y descripción,
-           con botones funcionales para editar, actualizar o eliminar.
-        ============================================================ */
         function actualizarPanelVideos() {
             const panelContainer = document.getElementById('panelVideosContainer');
             const panelContador = document.getElementById('panelContadorVideos');
@@ -1730,87 +1783,34 @@
             panelContador.textContent = `${misVideosPanel.length} videos`;
 
             if (misVideosPanel.length === 0) {
-                panelContainer.innerHTML = `<p style="color: #888; font-size: 13px;">No hay videos detectados en el panel actualmente.</p>`;
+                panelContainer.innerHTML = `<p style="color: #888; font-size: 13px; grid-column: 1 / -1;">No hay videos añadidos recientemente en el panel.</p>`;
                 return;
             }
 
             panelContainer.innerHTML = '';
             misVideosPanel.forEach((v, idx) => {
                 const itemCard = document.createElement('div');
-                itemCard.style.cssText = "background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px;";
-                
+                itemCard.style.cssText = "background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; display: flex; gap: 10px; align-items: center; cursor: pointer;";
+                itemCard.setAttribute('onclick', `openVideo('${v.title.replace(/'/g, "\\'")}', '${v.video}', '${v.image}')`);
                 itemCard.innerHTML = `
-                    <div style="display: flex; gap: 12px; align-items: flex-start;">
-                        <img src="${v.image || 'img/portada1.jpg'}" style="width: 90px; height: 55px; border-radius: 6px; object-fit: cover; flex-shrink: 0; cursor: pointer;" onclick="openVideo('${(v.title || '').replace(/'/g, "\\'")}', '${v.video}', '${v.image}')" alt="Miniatura">
-                        <div style="flex: 1; overflow: hidden;">
-                            <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 3px; cursor: pointer;" onclick="openVideo('${(v.title || '').replace(/'/g, "\\'")}', '${v.video}', '${v.image}')">${v.title}</div>
-                            <div style="font-size: 12px; color: #9ca3af; margin-bottom: 2px;">👤 Publicado por: <strong style="color: #e5e7eb;">${v.usuario || 'Anthony Merlos'}</strong> (<span style="color: #818cf8;">${v.correo || 'anthony@wibsiproject.com'}</span>)</div>
-                            <div style="font-size: 11px; color: #6b7280;">📅 ${v.fecha || 'Fecha no registrada'} | Categoria: ${v.categoria || 'Videos'}</div>
-                        </div>
-                    </div>
-                    <div style="font-size: 12px; color: #d1d5db; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; border-left: 3px solid #6366f1;">
-                        <em>${v.descripcion || 'Sin descripción.'}</em>
-                    </div>
-                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
-                        <button onclick="abrirModalPanelEditar('${v.id}')" style="background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">✏️ Editar / Actualizar</button>
-                        <button onclick="eliminarVideoPanel('${v.id}')" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">🗑️ Eliminar</button>
+                    <img src="${v.image}" style="width: 50px; height: 35px; border-radius: 4px; object-fit: cover;" alt="Thumb">
+                    <div style="overflow: hidden; flex: 1;">
+                        <div style="font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${v.title}</div>
+                        <div style="font-size: 10px; color: #9ca3af;">Cat: ${v.categoria || 'Videos'}</div>
                     </div>
                 `;
                 panelContainer.appendChild(itemCard);
             });
         }
 
-        function abrirModalPanelEditar(id) {
-            let misVideosPanel = JSON.parse(localStorage.getItem('wibsitihub_panel_videos')) || [];
-            const video = misVideosPanel.find(v => v.id === id);
-            if (!video) return;
-
-            document.getElementById('editPanelId').value = id;
-            document.getElementById('inputEditPanelTitle').value = video.title;
-            document.getElementById('inputEditPanelDesc').value = video.descripcion || '';
-
-            const modal = document.getElementById('modalEditarVideoPanel');
-            if (modal) modal.style.display = 'flex';
-        }
-
-        function cerrarModalPanel() {
-            const modal = document.getElementById('modalEditarVideoPanel');
-            if (modal) modal.style.display = 'none';
-        }
-
-        function guardarEdicionPanel() {
-            const id = document.getElementById('editPanelId').value;
-            const nuevoTitulo = document.getElementById('inputEditPanelTitle').value.trim();
-            const nuevaDesc = document.getElementById('inputEditPanelDesc').value.trim();
-
-            if (!nuevoTitulo) {
-                alert("El título no puede estar vacío.");
-                return;
-            }
-
-            let misVideosPanel = JSON.parse(localStorage.getItem('wibsitihub_panel_videos')) || [];
-            const index = misVideosPanel.findIndex(v => v.id === id);
-            if (index > -1) {
-                misVideosPanel[index].title = nuevoTitulo;
-                misVideosPanel[index].descripcion = nuevaDesc;
-                localStorage.setItem('wibsitihub_panel_videos', JSON.stringify(misVideosPanel));
-                actualizarPanelVideos();
-                cerrarModalPanel();
-                mostrarToast("¡Video actualizado en el panel correctamente! ✦");
-            }
-        }
-
-        function eliminarVideoPanel(id) {
-            if (!confirm("¿Estás seguro de eliminar este video del panel de administrador?")) return;
-
-            let misVideosPanel = JSON.parse(localStorage.getItem('wibsitihub_panel_videos')) || [];
-            misVideosPanel = misVideosPanel.filter(v => v.id !== id);
-            localStorage.setItem('wibsitihub_panel_videos', JSON.stringify(misVideosPanel));
-
-            actualizarPanelVideos();
-            mostrarToast("Video eliminado del panel con éxito 🗑️");
-        }
-
+        /* ============================================================
+           INICIO: GUARDAR Y MOSTRAR DE NUEVO LOS VIDEOS SUBIDOS
+           Antes, al recargar la página, los videos subidos por el
+           usuario desaparecían de la cuadrícula principal (solo
+           quedaban en el panel de abajo). Esta función los vuelve a
+           dibujar en #videoGrid usando los datos guardados en
+           localStorage, para que no se pierdan al recargar.
+        ============================================================ */
         function cargarVideosSubidosGuardados() {
             const videoGrid = document.getElementById('videoGrid');
             if (!videoGrid) return;
@@ -1818,8 +1818,11 @@
             let misVideosPanel = JSON.parse(localStorage.getItem('wibsitihub_panel_videos')) || [];
             if (misVideosPanel.length === 0) return;
 
+            // Insertamos del más antiguo al más nuevo para que el más reciente quede arriba
             for (let i = misVideosPanel.length - 1; i >= 0; i--) {
                 const v = misVideosPanel[i];
+
+                // Evitar duplicar si por algún motivo ya existe una tarjeta con ese id
                 if (videoGrid.querySelector(`[data-id="${v.id}"]`)) continue;
 
                 const tituloSeguro = (v.title || 'Video').replace(/'/g, "\\'");
@@ -1865,7 +1868,17 @@
                 videoGrid.insertBefore(nuevaCard, videoGrid.firstChild);
             }
         }
+        /* ============================================================
+           FIN: GUARDAR Y MOSTRAR DE NUEVO LOS VIDEOS SUBIDOS
+        ============================================================ */
 
+        /* ============================================================
+           INICIO: RECORDAR EL ÚLTIMO VIDEO VISTO AL RECARGAR LA PÁGINA
+           Guarda qué video estaba activo y, al volver a cargar la
+           página, muestra de nuevo la barra flotante con ese video
+           listo para reproducirse (no se autorreproduce por las
+           restricciones de los navegadores, pero queda visible).
+        ============================================================ */
         function restaurarUltimoVideoAlRecargar() {
             const datosGuardados = localStorage.getItem('wibsi_ultimo_video');
             if (!datosGuardados) return;
@@ -1884,7 +1897,17 @@
                 console.log('No se pudo restaurar el último video:', e);
             }
         }
+        /* ============================================================
+           FIN: RECORDAR EL ÚLTIMO VIDEO VISTO
+        ============================================================ */
 
+        /* ============================================================
+           INICIO: VERIFICAR SI HAY SESIÓN INICIADA (para exigir login
+           antes de subir video, tanto en PC como en móvil)
+           Revisa las claves más comunes que suele usar cuenta.html.
+           Si tu cuenta.html usa otra clave/nombre para guardar la
+           sesión, avísame y ajusto esta función para que coincida.
+        ============================================================ */
         function haySesionIniciada() {
             const posiblesClaves = [
                 'wibsi_sesion_iniciada',
@@ -1901,6 +1924,9 @@
             }
             return false;
         }
+        /* ============================================================
+           FIN: VERIFICAR SI HAY SESIÓN INICIADA
+        ============================================================ */
 
         function checkPassword() {
             const passwordCorrecta = "2436anthony123privado123"; 
@@ -1990,6 +2016,18 @@
             }
         }
 
+        function cerrarBarraFlotante(event) {
+            event.stopPropagation();
+            if (ymusicBar) {
+                ymusicBar.classList.add('closing');
+                setTimeout(() => {
+                    ymusicBar.style.display = 'none';
+                    ymusicBar.classList.remove('closing');
+                }, 300);
+            }
+            if (videoPlayer) videoPlayer.pause();
+        }
+
         function togglePlayBar(event) {
             event.stopPropagation();
             if (!videoPlayer) {
@@ -2034,12 +2072,32 @@
 
         function controlAnterior(event) {
             event.stopPropagation();
-            mostrarToast("Reproduciendo video anterior");
+            if (typeof window.videosListaOriginalPerfil === 'undefined' || window.videosListaOriginalPerfil.length === 0) {
+                mostrarToast("Reproduciendo video anterior");
+                return;
+            }
+            if (typeof indiceVideoActual !== 'undefined' && indiceVideoActual > 0) {
+                indiceVideoActual--;
+                let v = window.videosListaOriginalPerfil[indiceVideoActual];
+                openVideo(v.title, v.video, v.image);
+            } else {
+                mostrarToast("Este es el primer video");
+            }
         }
 
         function controlSiguiente(event) {
             event.stopPropagation();
-            mostrarToast("Reproduciendo siguiente video");
+            if (typeof window.videosListaOriginalPerfil === 'undefined' || window.videosListaOriginalPerfil.length === 0) {
+                mostrarToast("Reproduciendo siguiente video");
+                return;
+            }
+            if (typeof indiceVideoActual !== 'undefined' && indiceVideoActual < window.videosListaOriginalPerfil.length - 1) {
+                indiceVideoActual++;
+                let v = window.videosListaOriginalPerfil[indiceVideoActual];
+                openVideo(v.title, v.video, v.image);
+            } else {
+                mostrarToast("No hay más videos en la lista");
+            }
         }
 
         function mostrarMenuOpciones(event) {
@@ -2102,13 +2160,16 @@
         }
 
         function openVideo(title, videoSrc, imageSrc) {
+            // Guardar datos actuales para que el botón de compartir y guardar sepan qué video registrar
             videoActualReproduciendo = {
                 title: title,
                 video: videoSrc,
                 image: imageSrc
             };
 
+            // INICIO: recordar este video para poder mostrarlo de nuevo si se recarga la página
             localStorage.setItem('wibsi_ultimo_video', JSON.stringify(videoActualReproduciendo));
+            // FIN: recordar video
 
             let historialVideos = JSON.parse(localStorage.getItem('wibsitihub_historial_videos')) || [];
             
@@ -2162,7 +2223,7 @@
             }
         }
 
-    </script>
+     </script>
     <script src="script.js"></script>
 </body>
 </html>
